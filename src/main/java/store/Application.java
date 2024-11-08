@@ -19,6 +19,7 @@ public class Application {
     private void run() {
         do {
             inputView.start();
+            outputView.printProducts();
             inputView.readItem();
             inputView.readMembershipOption();
         } while (inputView.readContinueShopping());

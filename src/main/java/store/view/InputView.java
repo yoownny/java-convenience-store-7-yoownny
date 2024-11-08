@@ -10,6 +10,7 @@ public class InputView {
     public void start(){
         System.out.println("안녕하세요. W편의점입니다.");
         System.out.println("현재 보유하고 있는 상품입니다.");
+        System.out.println();
     }
 
     public Map<String, Integer> readItem() {
@@ -23,7 +24,7 @@ public class InputView {
     }
 
     private Map<String, Integer> tryReadItem() {
-        System.out.println("구매하실 상품명과 수량을 입력해 주세요. (예: [사이다-2],[감자칩-1])");
+        System.out.println("\n구매하실 상품명과 수량을 입력해 주세요. (예: [사이다-2],[감자칩-1])");
         String input = Console.readLine();
         validateInput(input);
         return parseOrderInput(input);
@@ -93,7 +94,7 @@ public class InputView {
     }
 
     private boolean tryReadMembershipOption() {
-        System.out.println("멤버십 할인을 받으시겠습니까? (Y/N)");
+        System.out.println("\n멤버십 할인을 받으시겠습니까? (Y/N)");
         String input = Console.readLine();
         validateYesNo(input);
         return input.trim().toUpperCase().equals("Y");
@@ -110,7 +111,7 @@ public class InputView {
     }
 
     private boolean tryReadContinueShopping() {
-        System.out.println("감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
+        System.out.println("\n감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
         String input = Console.readLine();
         validateYesNo(input);
         return input.trim().toUpperCase().equals("Y");

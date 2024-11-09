@@ -50,13 +50,6 @@ public class Product {
         return String.format("- %s %,d원 %d개%s", name, price, quantity, formatPromotion());
     }
 
-    private boolean isStockEmpty() {
-        if (quantity == 0) {
-            return true;
-        }
-        return false;
-    }
-
     private String formatPromotion() {
         if (hasPromotion()) {
             return " " + promotionName;
@@ -64,7 +57,7 @@ public class Product {
         return "";
     }
 
-    private boolean hasPromotion() {
+    public boolean hasPromotion() {
         if (promotionName == null || promotionName.isEmpty() || promotionName.equals("null")) {
             return false;
         }
@@ -79,10 +72,23 @@ public class Product {
         return this.price * quantity;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public String getPromotionName() {
+        return promotionName;
+    }
+
+    private boolean isStockEmpty() {
+        return quantity == 0;
+    }
+
     public boolean hasEnoughStock(int orderQuantity) {
-        if(quantity >= orderQuantity){
-            return true;
-        }
-        return false;
+        return quantity >= orderQuantity;
     }
 }

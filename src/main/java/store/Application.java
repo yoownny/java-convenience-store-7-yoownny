@@ -1,5 +1,6 @@
 package store;
 
+import java.util.Map;
 import store.domain.receipt.Receipt;
 import store.service.OrderService;
 import store.service.ProductService;
@@ -26,7 +27,7 @@ public class Application {
         new Application().run();
     }
 
-    private void run() {
+    public void run() {
         try {
             inputView.start();
             processOrders();
@@ -45,5 +46,37 @@ public class Application {
             }
             continueOrdering = inputView.readContinueShopping();
         }
+    }
+
+    private Receipt processOneOrder() {
+        try {
+            Map<String, Integer> items = inputView.readItem();
+            items = handlePromotionOptions(items);
+
+            if (items.isEmpty()) {
+                return null;
+            }
+
+            boolean useMembership = inputView.readMembershipOption();
+            return orderService.createOrder(items, useMembership);
+
+        } catch (IllegalArgumentException e) {
+            System.out.println("[ERROR] " + e.getMessage());
+            return null;
+        }
+    }
+
+    private Map<String, Integer> handlePromotionOptions(Map<String, Integer> items) {
+        for (Map.Entry<String, Integer> entry : items.entrySet()) {
+            String productName = entry.getKey();
+            int quantity = entry.getValue();
+
+            if (promotionService.canAddMoreItems(productName, quantity)) {
+                if (inputView.readAdditionalPurchase(productName, 1)) {
+                    items.put(productName, quantity + 1);
+                }
+            }
+        }
+        return items;
     }
 }

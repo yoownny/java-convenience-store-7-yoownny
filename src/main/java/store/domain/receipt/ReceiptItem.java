@@ -35,4 +35,8 @@ public class ReceiptItem {
     public int getQuantity() {
         return quantity;
     }
+
+    public int getPrice() {
+        return 0;
+    }
 }

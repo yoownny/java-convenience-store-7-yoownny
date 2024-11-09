@@ -15,4 +15,6 @@ public class Receipt {
         this.promotionDiscount = promotionDiscount;
         this.useMembership = useMembership;
     }
+
+
 }

@@ -12,4 +12,27 @@ public class ReceiptItem {
         this.price = price;
         this.giftQuantity = giftQuantity;
     }
+    public int calculateAmount() {
+        return price * quantity;
+    }
+
+    public String describeOrder() {
+        return String.format("%s\t\t%d \t%,d", name, quantity, calculateAmount());
+    }
+
+    public String describeGift() {
+        return String.format("%s\t\t%d", name, giftQuantity);
+    }
+
+    public boolean hasGift() {
+        return giftQuantity > 0;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
 }

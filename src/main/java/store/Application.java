@@ -28,7 +28,6 @@ public class Application {
     }
 
     public void run() {
-        inputView.start();
         try {
             processOrders();
         } catch (IllegalArgumentException e) {
@@ -37,6 +36,7 @@ public class Application {
     }
 
     private void processOrders() {
+        inputView.start();
         outputView.printProducts(productService.getAllProductDescriptions());
         Receipt receipt = createOrder();
         if (receipt != null) {

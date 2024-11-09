@@ -15,6 +15,53 @@ public class Receipt {
         this.promotionDiscount = promotionDiscount;
         this.useMembership = useMembership;
     }
+    public List<String> createOrderLines() {
+        return items.stream()
+                .map(ReceiptItem::describeOrder)
+                .toList();
+    }
 
+    public List<String> createGiftLines() {
+        return items.stream()
+                .filter(ReceiptItem::hasGift)
+                .map(ReceiptItem::describeGift)
+                .toList();
+    }
 
+    public int getTotalQuantity() {
+        return items.stream()
+                .mapToInt(ReceiptItem::getQuantity)
+                .sum();
+    }
+
+    public int calculateTotalAmount() {
+        return items.stream()
+                .mapToInt(ReceiptItem::calculateAmount)
+                .sum();
+    }
+
+    public int getPromotionDiscount() {
+        return promotionDiscount;
+    }
+
+    public int calculateMembershipDiscount() {
+        if (!useMembership) {
+            return 0;
+        }
+        int discountableAmount = calculateTotalAmount() - promotionDiscount;
+        int membershipDiscount = (int) (discountableAmount * MEMBERSHIP_DISCOUNT_RATE);
+        return Math.min(membershipDiscount, MAX_MEMBERSHIP_DISCOUNT);
+    }
+
+    public int calculateFinalAmount() {
+        return calculateTotalAmount() - promotionDiscount - calculateMembershipDiscount();
+    }
+
+    public boolean hasPromotionDiscount() {
+        return promotionDiscount > 0;
+    }
+
+    public boolean hasMembershipDiscount() {
+        return useMembership && calculateMembershipDiscount() > 0;
+    }
 }

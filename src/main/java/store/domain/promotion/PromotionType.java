@@ -24,10 +24,6 @@ public enum PromotionType {
         return null;
     }
 
-    public int calculateGiftQuantity(int purchaseQuantity) {
-        return (purchaseQuantity / buyQuantity) * giftQuantity;
-    }
-
     public boolean canApplyPromotion(int quantity) {
         return quantity >= buyQuantity;
     }
@@ -36,7 +32,7 @@ public enum PromotionType {
         return name;
     }
 
-    public int getBuyQuantity() {
-        return buyQuantity;
+    public int getGiftQuantity() {
+        return giftQuantity;
     }
 }

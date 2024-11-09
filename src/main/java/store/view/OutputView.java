@@ -9,12 +9,11 @@ public class OutputView {
     private static final String FOOTER = "====================================";
 
     public void printProducts(List<String> products) {
-        System.out.println();
         products.forEach(System.out::println);
-        System.out.println();
     }
 
     public void printReceipt(Receipt receipt) {
+        System.out.println();
         printHeader();
         printOrderSection(receipt);
 

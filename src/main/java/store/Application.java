@@ -19,7 +19,7 @@ public class Application {
         this.productService = new ProductService();
         this.promotionService = new PromotionService();
         this.orderService = new OrderService(productService.getProducts(), promotionService);
-        this.inputView = new InputView();
+        this.inputView = new InputView(orderService);
         this.outputView = new OutputView();
     }
 
@@ -28,52 +28,42 @@ public class Application {
     }
 
     public void run() {
+        inputView.start();
         try {
-            inputView.start();
             processOrders();
-        } catch (IllegalStateException e) {
-            System.out.println("[ERROR] " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println("\n[ERROR] " + e.getMessage());
         }
     }
 
     private void processOrders() {
-        boolean continueOrdering = true;
-        while (continueOrdering) {
-            outputView.printProducts(productService.getAllProductDescriptions());
-            Receipt receipt = processOneOrder();
-            if (receipt != null) {
-                outputView.printReceipt(receipt);
+        outputView.printProducts(productService.getAllProductDescriptions());
+        Receipt receipt = createOrder();
+        if (receipt != null) {
+            outputView.printReceipt(receipt);
+            if (inputView.readContinueShopping()) {
+                processOrders();
             }
-            continueOrdering = inputView.readContinueShopping();
         }
     }
 
-    private Receipt processOneOrder() {
+    private Receipt createOrder() {
         try {
             Map<String, Integer> items = inputView.readItem();
             items = handlePromotionOptions(items);
-
-            if (items.isEmpty()) {
-                return null;
-            }
-
             boolean useMembership = inputView.readMembershipOption();
             return orderService.createOrder(items, useMembership);
-
         } catch (IllegalArgumentException e) {
-            System.out.println("[ERROR] " + e.getMessage());
+            System.out.println("\n[ERROR] " + e.getMessage());
             return null;
         }
     }
 
     private Map<String, Integer> handlePromotionOptions(Map<String, Integer> items) {
         for (Map.Entry<String, Integer> entry : items.entrySet()) {
-            String productName = entry.getKey();
-            int quantity = entry.getValue();
-
-            if (promotionService.canAddMoreItems(productName, quantity)) {
-                if (inputView.readAdditionalPurchase(productName, 1)) {
-                    items.put(productName, quantity + 1);
+            if (promotionService.canAddMoreItems(entry.getKey(), entry.getValue())) {
+                if (inputView.readAdditionalPurchase(entry.getKey(), 1)) {
+                    items.put(entry.getKey(), entry.getValue() + 1);
                 }
             }
         }

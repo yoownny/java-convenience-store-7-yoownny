@@ -23,12 +23,14 @@ public class OrderService {
         return createReceipt(receiptItems, useMembership);
     }
 
+    // 주문 유효성 검사
     private void validateOrder(Map<String, Integer> orderItems) {
         if (orderItems == null || orderItems.isEmpty()) {
             throw new IllegalArgumentException("주문 항목이 비어있습니다.");
         }
     }
 
+    // 주문 생성
     private List<ReceiptItem> processOrderItems(Map<String, Integer> orderItems) {
         List<ReceiptItem> receiptItems = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : orderItems.entrySet()) {
@@ -47,21 +49,24 @@ public class OrderService {
         return new ReceiptItem(productName, quantity, product.getPrice(), giftQuantity);
     }
 
-    private Product findProduct(String productName) {
+    // 상품 찾기
+    public Product findProduct(String productName) {
         return products.findByName(productName)
                 .orElseThrow(() -> new IllegalArgumentException(
                         String.format("존재하지 않는 상품입니다: %s", productName)
                 ));
     }
 
+    // 재고 확인
     private void validateStock(Product product, int quantity) {
         if (!product.hasEnoughStock(quantity)) {
             throw new IllegalArgumentException(
-                    String.format("[%s] 재고가 부족합니다.", product.getName())
+                    String.format("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.")
             );
         }
     }
 
+    // 영수증 생성
     private Receipt createReceipt(List<ReceiptItem> items, boolean useMembership) {
         int promotionDiscount = promotionService.calculateTotalDiscount(items);
         return new Receipt(items, promotionDiscount, useMembership);

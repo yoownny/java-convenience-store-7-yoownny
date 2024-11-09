@@ -16,6 +16,7 @@ public class PromotionService {
         this.promotions = FileLoader.loadPromotions();
     }
 
+    // 증정 수량 계산
     public int calculateGiftQuantity(Product product, int quantity) {
         if (!product.hasPromotion()) {
             return 0;
@@ -29,6 +30,7 @@ public class PromotionService {
         return promotion.calculateGiftQuantity(quantity);
     }
 
+    // 전체 할인 금액 계산
     public int calculateTotalDiscount(List<ReceiptItem> items) {
         return items.stream()
                 .mapToInt(this::calculateItemDiscount)
@@ -36,11 +38,14 @@ public class PromotionService {
     }
 
     private int calculateItemDiscount(ReceiptItem item) {
+        if (!item.hasGift()) {
+            return 0;
+        }
         Promotion promotion = findValidPromotion(item.getName());
         if (promotion == null) {
             return 0;
         }
-        return promotion.calculateDiscount(item.getQuantity(), item.getPrice());
+        return promotion.calculateDiscount(item.getGiftQuantity(), item.getPrice());
     }
 
     private Promotion findValidPromotion(String promotionName) {

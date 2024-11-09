@@ -3,31 +3,29 @@ package store.view;
 import camp.nextstep.edu.missionutils.Console;
 import java.util.HashMap;
 import java.util.Map;
+import store.service.OrderService;
 
 public class InputView {
     private static final String ITEM_DELIMITER = "-";
+    private final OrderService orderService;
 
-    public void start(){
+    public InputView(OrderService orderService) {
+        this.orderService = orderService;
+    }
+
+    public void start() {
         System.out.println("안녕하세요. W편의점입니다.");
         System.out.println("현재 보유하고 있는 상품입니다.");
         System.out.println();
     }
 
     public Map<String, Integer> readItem() {
-        while (true) {
-            try {
-                return tryReadItem();
-            } catch (IllegalArgumentException e) {
-                System.out.println("[ERROR] " + e.getMessage());
-            }
-        }
-    }
-
-    private Map<String, Integer> tryReadItem() {
         System.out.println("\n구매하실 상품명과 수량을 입력해 주세요. (예: [사이다-2],[감자칩-1])");
         String input = Console.readLine();
         validateInput(input);
-        return parseOrderInput(input);
+        Map<String, Integer> orders = parseOrderInput(input);
+        validateProductsExist(orders);
+        return orders;
     }
 
     private void validateInput(String input) {
@@ -42,6 +40,7 @@ public class InputView {
     private Map<String, Integer> parseOrderInput(String input) {
         String cleanInput = input.replace("[", "").replace("]", "");
         String[] orderItems = cleanInput.split(",");
+        validateOrderItems(orderItems);
 
         Map<String, Integer> orders = new HashMap<>();
         for (String item : orderItems) {
@@ -49,6 +48,12 @@ public class InputView {
             addOrder(orders, parts);
         }
         return orders;
+    }
+
+    private void validateOrderItems(String[] orderItems) {
+        if (orderItems.length == 0) {
+            throw new IllegalArgumentException("주문 항목이 없습니다.");
+        }
     }
 
     private void addOrder(Map<String, Integer> orders, String[] parts) {
@@ -64,6 +69,12 @@ public class InputView {
         }
         if (parts[0].trim().isEmpty()) {
             throw new IllegalArgumentException("상품명이 비어있습니다.");
+        }
+    }
+
+    private void validateProductsExist(Map<String, Integer> orders) {
+        for (String productName : orders.keySet()) {
+            orderService.findProduct(productName);
         }
     }
 
@@ -83,53 +94,23 @@ public class InputView {
         }
     }
 
-
-    public boolean readAdditionalPurchase(String productName, int plusQuantity) {
+    public boolean readAdditionalPurchase(String productName, int quantity) {
         System.out.printf("현재 %s은(는) %d개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)\n",
-                productName, plusQuantity);
-        String input = Console.readLine();
-        validateYesNo(input);
-        return input.trim().toUpperCase().equals("Y");
+                productName, quantity);
+        return readYesNo();
     }
-
-    public boolean readPromotionPurchase(String productName, int exceptQuantity) {
-        System.out.printf("현재 %s %d개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)\n",
-                productName, exceptQuantity);
-        String input = Console.readLine();
-        validateYesNo(input);
-        return input.trim().toUpperCase().equals("Y");
-    }
-
 
     public boolean readMembershipOption() {
-        while (true) {
-            try {
-                return tryReadMembershipOption();
-            } catch (IllegalArgumentException e) {
-                System.out.println("[ERROR] " + e.getMessage());
-            }
-        }
-    }
-
-    private boolean tryReadMembershipOption() {
         System.out.println("\n멤버십 할인을 받으시겠습니까? (Y/N)");
-        String input = Console.readLine();
-        validateYesNo(input);
-        return input.trim().toUpperCase().equals("Y");
+        return readYesNo();
     }
 
     public boolean readContinueShopping() {
-        while (true) {
-            try {
-                return tryReadContinueShopping();
-            } catch (IllegalArgumentException e) {
-                System.out.println("[ERROR] " + e.getMessage());
-            }
-        }
+        System.out.println("\n감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
+        return readYesNo();
     }
 
-    private boolean tryReadContinueShopping() {
-        System.out.println("\n감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
+    private boolean readYesNo() {
         String input = Console.readLine();
         validateYesNo(input);
         return input.trim().toUpperCase().equals("Y");

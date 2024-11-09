@@ -1,5 +1,7 @@
 package store.domain.product;
 
+import java.util.List;
+
 public class Product {
     private final String name;
     private final int price;
@@ -7,34 +9,27 @@ public class Product {
     private int quantity;
 
     public Product(String name, int price, int quantity, String promotionName) {
-        validateProduct(name, price);
         this.name = name;
         this.price = price;
         this.quantity = quantity;
         this.promotionName = promotionName;
     }
 
-    private void validateProduct(String name, int price) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("상품명은 필수입니다.");
-        }
-        if (price <= 0) {
-            throw new IllegalArgumentException("상품 가격은 0보다 커야 합니다.");
-        }
-    }
-
+    // 재고 감소
     public void decreaseQuantity(int orderQuantity) {
         validateOrderQuantity(orderQuantity);
         validateStock(orderQuantity);
         this.quantity -= orderQuantity;
     }
 
+    // 주문 수량 검증
     private void validateOrderQuantity(int orderQuantity) {
         if (orderQuantity <= 0) {
             throw new IllegalArgumentException("주문 수량은 0보다 커야 합니다.");
         }
     }
 
+    // 재고가 충분한지 검증
     private void validateStock(int orderQuantity) {
         if (this.quantity < orderQuantity) {
             throw new IllegalStateException(
@@ -43,11 +38,25 @@ public class Product {
         }
     }
 
-    public String describeProduct() {
+    // 상품 표시
+    public String describeProduct(List<Product> allProducts) {
         if (isStockEmpty()) {
-            return String.format("- %s %,d원 재고 없음%s", name, price, formatPromotion());
+            return String.format("- %s %,d원 재고 없음 %s", name, price, formatPromotion().trim());
         }
-        return String.format("- %s %,d원 %d개%s", name, price, quantity, formatPromotion());
+        if (hasPromotion() && !hasNonPromotionalStock(allProducts)) {
+            return String.format("- %s %,d원 %d개 %s\n"
+                    + "- %s %,d원 재고 없음", name, price, quantity, formatPromotion().trim(), name, price);
+        }
+        return String.format("- %s %,d원 %d개 %s", name, price, quantity, formatPromotion().trim());
+    }
+
+    private boolean hasNonPromotionalStock(List<Product> allProducts) {
+        for (Product product : allProducts) {
+            if (product.matchesName(name) && !product.hasPromotion() && product.quantity > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String formatPromotion() {
@@ -57,6 +66,7 @@ public class Product {
         return "";
     }
 
+    // 유요한 프로모션이 있는지 확인
     public boolean hasPromotion() {
         if (promotionName == null || promotionName.isEmpty() || promotionName.equals("null")) {
             return false;

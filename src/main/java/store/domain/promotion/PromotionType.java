@@ -7,12 +7,36 @@ public enum PromotionType {
 
     private final String name;
     private final int buyQuantity;
-    private final int gigtQuantity;
+    private final int giftQuantity;
 
-    PromotionType(final String name, final int buyQuantity, final int gigtQuantity) {
+    PromotionType(final String name, final int buyQuantity, final int giftQuantity) {
         this.name = name;
         this.buyQuantity = buyQuantity;
-        this.gigtQuantity = gigtQuantity;
+        this.giftQuantity = giftQuantity;
     }
 
+    public static PromotionType fromName(String name) {
+        for (PromotionType type : values()) {
+            if (type.name.equals(name)) {
+                return type;
+            }
+        }
+        return null;
+    }
+
+    public int calculateGiftQuantity(int purchaseQuantity) {
+        return (purchaseQuantity / buyQuantity) * giftQuantity;
+    }
+
+    public boolean canApplyPromotion(int quantity) {
+        return quantity >= buyQuantity;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getBuyQuantity() {
+        return buyQuantity;
+    }
 }

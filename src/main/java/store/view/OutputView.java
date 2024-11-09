@@ -50,15 +50,13 @@ public class OutputView {
                 receipt.getTotalQuantity(),
                 receipt.calculateTotalAmount());
 
-        if (receipt.hasPromotionDiscount()) {
-            System.out.printf("행사할인\t\t\t-%,d\n",
-                    receipt.getPromotionDiscount());
-        }
+        // 행사 할인은 항상 출력 (0이어도 출력)
+        System.out.printf("행사할인\t\t\t-%,d\n",
+                receipt.getPromotionDiscount());
 
-        if (receipt.hasMembershipDiscount()) {
-            System.out.printf("멤버십할인\t\t\t-%,d\n",
-                    receipt.calculateMembershipDiscount());
-        }
+        // 멤버십 할인도 항상 출력 (0이어도 출력)
+        System.out.printf("멤버십할인\t\t\t-%,d\n",
+                receipt.calculateMembershipDiscount());
 
         System.out.printf("내실돈\t\t\t %,d\n",
                 receipt.calculateFinalAmount());

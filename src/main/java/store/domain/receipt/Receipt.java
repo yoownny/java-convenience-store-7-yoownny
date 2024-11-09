@@ -5,6 +5,8 @@ import java.util.List;
 public class Receipt {
     private static final double MEMBERSHIP_DISCOUNT_RATE = 0.3;
     private static final int MAX_MEMBERSHIP_DISCOUNT = 8000;
+    private static final String MD_PROMOTION = "MD추천상품";
+    private static final String FLASH_SALE = "반짝할인";
 
     private final List<ReceiptItem> items;
     private final int promotionDiscount;
@@ -50,24 +52,27 @@ public class Receipt {
         return promotionDiscount;
     }
 
-    // 멤버십 할인 금액 계산
     public int calculateMembershipDiscount() {
         if (!useMembership) {
             return 0;
         }
 
-        int discountableAmount = calculateDiscountableAmount();;
+        // MD추천상품이나 반짝할인이 적용된 상품은 멤버십 할인 제외
+        int discountableAmount = items.stream()
+                .filter(item -> !item.hasGift() && !hasPromotionType(item.getName()))
+                .mapToInt(ReceiptItem::calculateAmount)
+                .sum();
+
         int membershipDiscount = (int) (discountableAmount * MEMBERSHIP_DISCOUNT_RATE);
         return Math.min(membershipDiscount, MAX_MEMBERSHIP_DISCOUNT);
     }
 
-    // 프로모션 적용되지 않은 상품만 필터링
-    private int calculateDiscountableAmount() {
-        return items.stream()
-                .filter(item -> !item.hasGift())
-                .mapToInt(ReceiptItem::calculateAmount)
-                .sum();
+    // 프로모션 타입 확인 메서드 수정
+    private boolean hasPromotionType(String productName) {
+        return productName.contains(MD_PROMOTION) ||
+                productName.contains(FLASH_SALE);
     }
+
 
     // 최종 결제 금액 계산
     public int calculateFinalAmount() {

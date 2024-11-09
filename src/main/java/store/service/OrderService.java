@@ -43,9 +43,19 @@ public class OrderService {
     private ReceiptItem processOneItem(String productName, int quantity) {
         Product product = findProduct(productName);
         validateStock(product, quantity);
-        product.decreaseQuantity(quantity);
 
-        int giftQuantity = promotionService.calculateGiftQuantity(product, quantity);
+        int totalQuantity = quantity;
+        if (promotionService.shouldAskForAdditionalItems(product, quantity)) {
+            totalQuantity *= 2; // 1+1이므로 2배
+            validateStock(product, totalQuantity);
+        }
+
+        product.decreaseQuantity(totalQuantity);
+
+        // 프로모션 적용될 수 있는 수량 계산
+        int promotionalQuantity = promotionService.calculatePromotionalQuantity(product, quantity);
+        int giftQuantity = promotionService.calculateGiftQuantity(product, promotionalQuantity);
+
         return new ReceiptItem(productName, quantity, product.getPrice(), giftQuantity);
     }
 
@@ -70,5 +80,25 @@ public class OrderService {
     private Receipt createReceipt(List<ReceiptItem> items, boolean useMembership) {
         int promotionDiscount = promotionService.calculateTotalDiscount(items);
         return new Receipt(items, promotionDiscount, useMembership);
+    }
+
+    public boolean shouldAskForAdditionalItems(String productName, int quantity) {
+        Product product = findProduct(productName);
+        return promotionService.shouldAskForAdditionalItems(product, quantity);
+    }
+
+    public int calculateAdditionalQuantity(String productName, int quantity) {
+        Product product = findProduct(productName);
+        return promotionService.calculateAdditionalQuantity(product, quantity);
+    }
+
+    public boolean shouldShowNonPromotionalWarning(String productName, int quantity) {
+        Product product = findProduct(productName);
+        return promotionService.shouldShowNonPromotionalWarning(product, quantity);
+    }
+
+    public int calculateNonPromotionalQuantity(String productName, int quantity) {
+        Product product = findProduct(productName);
+        return promotionService.calculateNonPromotionalQuantity(product, quantity);
     }
 }

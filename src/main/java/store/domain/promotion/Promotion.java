@@ -16,4 +16,21 @@ public class Promotion {
         this.startDate = startDate;
         this.endDate = endDate;
     }
+
+    public boolean isValidOn(LocalDate date) {
+        return !date.isBefore(startDate) && !date.isAfter(endDate);
+    }
+
+    public int calculateGiftQuantity(int purchaseQuantity) {
+        return (purchaseQuantity / buyQuantity) * giftQuantity;
+    }
+
+    public int calculateDiscount(int quantity, int price) {
+        int giftQuantity = calculateGiftQuantity(quantity);
+        return giftQuantity * price;
+    }
+
+    public String getName() {
+        return name;
+    }
 }

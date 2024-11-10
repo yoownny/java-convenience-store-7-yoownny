@@ -73,8 +73,6 @@ public class FileLoader {
 
         return new Promotion(
                 parts[0],
-                Integer.parseInt(parts[1]),
-                Integer.parseInt(parts[2]),
                 LocalDate.parse(parts[3]),
                 LocalDate.parse(parts[4])
         );

@@ -158,14 +158,6 @@ public class OrderService {
                 .orElse(null);
     }
 
-    private int calculatePromotionQuantity(Product promotionProduct, int requestedQuantity) {
-        if (promotionProduct == null || !promotionProduct.hasEnoughStock(1)) {
-            return 0;
-        }
-
-        int maxPromotionSets = promotionProduct.getQuantity() / 3 * 3;
-        return Math.min(requestedQuantity, maxPromotionSets);
-    }
 
     public Product findProduct(String productName) {
         return products.findByName(productName)

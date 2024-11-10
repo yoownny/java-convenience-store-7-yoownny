@@ -52,27 +52,6 @@ public class PromotionService {
         return false;
     }
 
-    public int calculateGiftQuantity(Product product, int quantity) {
-        if (!product.hasPromotion()) {
-            return 0;
-        }
-
-        Promotion promotion = promotions.get(product.getPromotionName());
-        if (promotion == null || !promotion.isActive(DateTimes.now().toLocalDate())) {
-            return 0;
-        }
-
-        String promotionName = product.getPromotionName();
-        if (MD_PROMOTION.equals(promotionName) || STAR_PROMOTION.equals(promotionName)) {
-            return quantity / 2;
-        }
-
-        if (CARBONATE_PROMOTION.equals(promotionName)) {
-            return quantity / 3;
-        }
-
-        return 0;
-    }
 
     public Promotion getPromotion(String promotionName) {
         return promotions.get(promotionName);

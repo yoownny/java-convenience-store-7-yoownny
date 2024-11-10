@@ -53,22 +53,85 @@ public class OrderService {
         Product promotionProduct = findPromotionProduct(availableProducts);
         Product normalProduct = findNormalProduct(availableProducts);
 
-        int promotionQuantity = calculatePromotionQuantity(promotionProduct, quantity);
-        int remainingQuantity = quantity - promotionQuantity;
         int giftQuantity = 0;
+        int remainingQuantity = quantity;
 
-        // 프로모션 수량 처리
-        if (promotionQuantity > 0) {
-            giftQuantity = promotionService.calculateGiftQuantity(promotionProduct, promotionQuantity);
-            promotionProduct.decreaseQuantity(promotionQuantity);
+        // 프로모션 재고 처리
+        if (promotionProduct != null) {
+            if (promotionProduct.getPromotionName().equals("탄산2+1")) {
+                // 2+1 프로모션의 경우
+                int availableQuantity = Math.min(promotionProduct.getQuantity(), quantity);
+                int maxPromotionSets = availableQuantity / 3;  // 가능한 세트 수
+                int promotionUseQuantity = maxPromotionSets * 3;  // 세트로 사용할 수량
+
+                if (promotionUseQuantity > 0) {
+                    giftQuantity = maxPromotionSets;  // 세트 수만큼 증정
+                    promotionProduct.decreaseQuantity(availableQuantity);
+                    remainingQuantity = quantity - availableQuantity;
+                }
+            } else if (promotionProduct.getPromotionName().equals("MD추천상품") ||
+                    promotionProduct.getPromotionName().equals("반짝할인")) {
+                // 1+1 프로모션의 경우
+                int availableQuantity = Math.min(promotionProduct.getQuantity(), quantity);
+                int maxPromotionPairs = availableQuantity / 2;  // 가능한 페어 수
+                int promotionUseQuantity = maxPromotionPairs * 2;  // 페어로 사용할 수량
+
+                if (promotionUseQuantity > 0) {
+                    giftQuantity = maxPromotionPairs;  // 페어 수만큼 증정
+                    promotionProduct.decreaseQuantity(availableQuantity);
+                    remainingQuantity = quantity - availableQuantity;
+                }
+            }
         }
 
-        // 일반 재고 처리
+        // 남은 수량은 일반 재고에서 처리
         if (remainingQuantity > 0) {
-            normalProduct.decreaseQuantity(remainingQuantity);
+            if (normalProduct != null && normalProduct.hasEnoughStock(remainingQuantity)) {
+                normalProduct.decreaseQuantity(remainingQuantity);
+            } else {
+                throw new IllegalArgumentException("일반 상품의 재고가 부족합니다.");
+            }
         }
 
         return new ReceiptItem(productName, quantity, findProduct(productName).getPrice(), giftQuantity);
+    }
+
+    public boolean shouldShowNonPromotionalWarning(String productName, int quantity) {
+        List<Product> availableProducts = products.findAllByName(productName);
+        Product promotionProduct = findPromotionProduct(availableProducts);
+
+        if (promotionProduct == null) {
+            return false;
+        }
+
+        // 프로모션 재고가 부족할 때만 경고
+        return quantity > promotionProduct.getQuantity();
+    }
+
+    public int calculateNonPromotionalQuantity(String productName, int quantity) {
+        List<Product> availableProducts = products.findAllByName(productName);
+        Product promotionProduct = findPromotionProduct(availableProducts);
+
+        if (promotionProduct == null) {
+            return 0;
+        }
+
+        // 프로모션 재고 초과 수량 계산
+        int nonPromotionalQuantity = quantity - promotionProduct.getQuantity();
+        if (nonPromotionalQuantity > 0) {
+            int promotionStock = promotionProduct.getQuantity();
+            // 프로모션 재고에서 사용하고 남은 나머지가 있다면 그것도 일반 재고 수량에 포함
+            if (promotionProduct.getPromotionName().equals("탄산2+1")) {
+                int usablePromotionQuantity = (promotionStock / 3) * 3;
+                nonPromotionalQuantity = quantity - usablePromotionQuantity;
+            } else if (promotionProduct.getPromotionName().equals("MD추천상품") ||
+                    promotionProduct.getPromotionName().equals("반짝할인")) {
+                int usablePromotionQuantity = (promotionStock / 2) * 2;
+                nonPromotionalQuantity = quantity - usablePromotionQuantity;
+            }
+        }
+
+        return nonPromotionalQuantity;
     }
 
     // 재고 확인 메서드들

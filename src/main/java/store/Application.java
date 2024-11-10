@@ -52,7 +52,17 @@ public class Application {
     private Receipt createOrder() {
         try {
             Map<String, Integer> items = inputView.readItem();
+
+            orderService.validateOrder(items);
+
+            // 프로모션 미적용 수량 확인
+            if (!checkNonPromotionalItems(items)) {
+                return null;  // 사용자가 취소한 경우
+            }
+
+            // 추가 프로모션 옵션 처리
             items = handlePromotionOptions(items);
+
             orderService.validateOrder(items);
             boolean useMembership = inputView.readMembershipOption();
             return orderService.createOrder(items, useMembership);
@@ -60,6 +70,21 @@ public class Application {
             System.out.println("\n[ERROR] " + e.getMessage());
             return null;
         }
+    }
+
+    private boolean checkNonPromotionalItems(Map<String, Integer> items) {
+        for (Map.Entry<String, Integer> entry : items.entrySet()) {
+            String productName = entry.getKey();
+            int quantity = entry.getValue();
+
+            if (orderService.shouldShowNonPromotionalWarning(productName, quantity)) {
+                int nonPromotionalQty = orderService.calculateNonPromotionalQuantity(productName, quantity);
+                if (!inputView.confirmNonPromotionalPurchase(productName, nonPromotionalQty)) {
+                    return false;  // 사용자가 구매를 취소한 경우
+                }
+            }
+        }
+        return true;
     }
 
     private Map<String, Integer> handlePromotionOptions(Map<String, Integer> items) {

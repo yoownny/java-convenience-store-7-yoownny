@@ -50,11 +50,9 @@ public class OutputView {
                 receipt.getTotalQuantity(),
                 receipt.calculateTotalAmount());
 
-        // 행사 할인은 항상 출력 (0이어도 출력)
         System.out.printf("행사할인\t\t\t\t\t-%,d\n",
                 receipt.getPromotionDiscount());
 
-        // 멤버십 할인도 항상 출력 (0이어도 출력)
         System.out.printf("멤버십할인\t\t\t\t-%,d\n",
                 receipt.calculateMembershipDiscount());
 

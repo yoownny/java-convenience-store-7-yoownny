@@ -13,22 +13,18 @@ public class ReceiptItem {
         this.giftQuantity = giftQuantity;
     }
 
-    // 해당 상품의 총 구매 금액 계산
     public int calculateAmount() {
         return price * quantity;
     }
 
-    // 구매 내역을 영수증 형식의 문자열로 변환
     public String describeOrder() {
         return String.format("%s\t\t\t%d\t\t%,d", name, quantity, calculateAmount());
     }
 
-    // 증정 내역을 영수증 형식의 문자열로 변환
     public String describeGift() {
         return String.format("%s\t\t\t%d", name, giftQuantity);
     }
 
-    // 증정 품목이 있는지 확인
     public boolean hasGift() {
         return giftQuantity > 0;
     }

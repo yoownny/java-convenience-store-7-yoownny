@@ -18,7 +18,6 @@ public class PromotionService {
         this.promotions = FileLoader.loadPromotions();
     }
 
-    // 전체 할인 금액 계산
     public int calculateTotalDiscount(List<ReceiptItem> items) {
         return items.stream()
                 .mapToInt(this::calculateItemDiscount)
@@ -58,20 +57,17 @@ public class PromotionService {
             return 0;
         }
 
-        // 프로모션 찾기
         Promotion promotion = promotions.get(product.getPromotionName());
         if (promotion == null || !promotion.isValidOn(DateTimes.now().toLocalDate())) {
-            return 0;  // 유효하지 않은 프로모션은 증정 없음
+            return 0;
         }
 
         String promotionName = product.getPromotionName();
         if (MD_PROMOTION.equals(promotionName) || STAR_PROMOTION.equals(promotionName)) {
-            // 1+1 프로모션: 모든 짝수 개수에 대해 절반 증정
             return quantity / 2;
         }
 
         if (CARBONATE_PROMOTION.equals(promotionName)) {
-            // 2+1 프로모션: 3개 단위로 1개씩 증정
             return quantity / 3;
         }
 

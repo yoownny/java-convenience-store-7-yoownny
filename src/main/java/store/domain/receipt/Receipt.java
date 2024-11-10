@@ -18,14 +18,12 @@ public class Receipt {
         this.useMembership = useMembership;
     }
 
-    // 구매 항목들을 영수증 형식의 문자열 목록으로 변환
     public List<String> createOrderLines() {
         return items.stream()
                 .map(ReceiptItem::describeOrder)
                 .toList();
     }
 
-    // 증정 항목들을 영수증 형식의 문자열 목록으로 변환
     public List<String> createGiftLines() {
         return items.stream()
                 .filter(ReceiptItem::hasGift)
@@ -33,21 +31,18 @@ public class Receipt {
                 .toList();
     }
 
-    // 전체 구매 수량 계산
     public int getTotalQuantity() {
         return items.stream()
                 .mapToInt(ReceiptItem::getQuantity)
                 .sum();
     }
 
-    // 총 구매 금액 계산 (할인 전)
     public int calculateTotalAmount() {
         return items.stream()
                 .mapToInt(ReceiptItem::calculateAmount)
                 .sum();
     }
 
-    // 프로모션 할인 금액 조회
     public int getPromotionDiscount() {
         return promotionDiscount;
     }
@@ -57,7 +52,6 @@ public class Receipt {
             return 0;
         }
 
-        // MD추천상품이나 반짝할인이 적용된 상품은 멤버십 할인 제외
         int discountableAmount = items.stream()
                 .filter(item -> !item.hasGift() && !hasPromotionType(item.getName()))
                 .mapToInt(ReceiptItem::calculateAmount)
@@ -67,13 +61,11 @@ public class Receipt {
         return Math.min(membershipDiscount, MAX_MEMBERSHIP_DISCOUNT);
     }
 
-    // 프로모션 타입 확인 메서드 수정
     private boolean hasPromotionType(String productName) {
         return productName.contains(MD_PROMOTION) ||
                 productName.contains(FLASH_SALE);
     }
 
-    // 최종 결제 금액 계산
     public int calculateFinalAmount() {
         return calculateTotalAmount() - promotionDiscount - calculateMembershipDiscount();
     }

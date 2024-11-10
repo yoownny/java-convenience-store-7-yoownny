@@ -1,10 +1,12 @@
 package store.service;
 
+import camp.nextstep.edu.missionutils.DateTimes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import store.domain.product.Product;
 import store.domain.product.Products;
+import store.domain.promotion.Promotion;
 import store.domain.receipt.Receipt;
 import store.domain.receipt.ReceiptItem;
 
@@ -53,28 +55,34 @@ public class OrderService {
         int giftQuantity = 0;
         int remainingQuantity = quantity;
 
-        if (promotionProduct != null) {
-            if (promotionProduct.getPromotionName().equals("탄산2+1")) {
-                int availableQuantity = Math.min(promotionProduct.getQuantity(), quantity);
-                int maxPromotionSets = availableQuantity / 3;
-                int promotionUseQuantity = maxPromotionSets * 3;
+        if (promotionProduct != null && promotionProduct.hasPromotion()) {
+            // PromotionService를 통해 프로모션을 가져옵니다.
+            Promotion promotion = promotionService.getPromotion(promotionProduct.getPromotionName());
 
-                if (promotionUseQuantity > 0) {
-                    giftQuantity = maxPromotionSets;
-                    promotionProduct.decreaseQuantity(availableQuantity);
-                    remainingQuantity = quantity - availableQuantity;
-                }
-            } else if (promotionProduct.getPromotionName().equals("MD추천상품") ||
-                    promotionProduct.getPromotionName().equals("반짝할인")) {
+            // 프로모션이 유효한지 확인
+            if (promotion != null && promotion.isActive(DateTimes.now().toLocalDate())) {
+                if (promotionProduct.getPromotionName().equals("탄산2+1")) {
+                    int availableQuantity = Math.min(promotionProduct.getQuantity(), quantity);
+                    int maxPromotionSets = availableQuantity / 3;
+                    int promotionUseQuantity = maxPromotionSets * 3;
 
-                int availableQuantity = Math.min(promotionProduct.getQuantity(), quantity);
-                int maxPromotionPairs = availableQuantity / 2;
-                int promotionUseQuantity = maxPromotionPairs * 2;
+                    if (promotionUseQuantity > 0) {
+                        giftQuantity = maxPromotionSets;
+                        promotionProduct.decreaseQuantity(availableQuantity);
+                        remainingQuantity = quantity - availableQuantity;
+                    }
+                } else if (promotionProduct.getPromotionName().equals("MD추천상품") ||
+                        promotionProduct.getPromotionName().equals("반짝할인")) {
 
-                if (promotionUseQuantity > 0) {
-                    giftQuantity = maxPromotionPairs;
-                    promotionProduct.decreaseQuantity(availableQuantity);
-                    remainingQuantity = quantity - availableQuantity;
+                    int availableQuantity = Math.min(promotionProduct.getQuantity(), quantity);
+                    int maxPromotionPairs = availableQuantity / 2;
+                    int promotionUseQuantity = maxPromotionPairs * 2;
+
+                    if (promotionUseQuantity > 0) {
+                        giftQuantity = maxPromotionPairs;
+                        promotionProduct.decreaseQuantity(availableQuantity);
+                        remainingQuantity = quantity - availableQuantity;
+                    }
                 }
             }
         }

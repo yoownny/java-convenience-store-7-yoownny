@@ -33,4 +33,18 @@ public class Promotion {
     public String getName() {
         return name;
     }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    // 현재 날짜에 유효한 프로모션인지 확인하는 메서드
+    public boolean isActive(LocalDate date) {
+        return (date.isEqual(startDate) || date.isAfter(startDate)) &&
+                (date.isEqual(endDate) || date.isBefore(endDate));
+    }
 }

@@ -58,7 +58,7 @@ public class PromotionService {
         }
 
         Promotion promotion = promotions.get(product.getPromotionName());
-        if (promotion == null || !promotion.isValidOn(DateTimes.now().toLocalDate())) {
+        if (promotion == null || !promotion.isActive(DateTimes.now().toLocalDate())) {
             return 0;
         }
 
@@ -72,5 +72,9 @@ public class PromotionService {
         }
 
         return 0;
+    }
+
+    public Promotion getPromotion(String promotionName) {
+        return promotions.get(promotionName);
     }
 }

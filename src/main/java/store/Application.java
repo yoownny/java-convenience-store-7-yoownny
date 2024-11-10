@@ -1,6 +1,8 @@
 package store;
 
+import java.util.HashMap;
 import java.util.Map;
+import store.domain.product.Product;
 import store.domain.receipt.Receipt;
 import store.service.OrderService;
 import store.service.ProductService;
@@ -61,13 +63,19 @@ public class Application {
     }
 
     private Map<String, Integer> handlePromotionOptions(Map<String, Integer> items) {
+        Map<String, Integer> updatedItems = new HashMap<>(items);
+
         for (Map.Entry<String, Integer> entry : items.entrySet()) {
-            if (promotionService.canAddMoreItems(entry.getKey(), entry.getValue())) {
-                if (inputView.readAdditionalPurchase(entry.getKey(), 1)) {
-                    items.put(entry.getKey(), entry.getValue() + 1);
+            String productName = entry.getKey();
+            int quantity = entry.getValue();
+            Product product = orderService.findProduct(productName);
+
+            if (promotionService.canAddMoreItems(productName, product, quantity)) {
+                if (inputView.readAdditionalPurchase(productName, 1)) {
+                    updatedItems.put(productName, quantity + 1);
                 }
             }
         }
-        return items;
+        return updatedItems;
     }
 }

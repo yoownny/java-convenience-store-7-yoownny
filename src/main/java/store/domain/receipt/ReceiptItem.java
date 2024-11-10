@@ -20,12 +20,12 @@ public class ReceiptItem {
 
     // 구매 내역을 영수증 형식의 문자열로 변환
     public String describeOrder() {
-        return String.format("%s\t\t%d\t%,d", name, quantity, calculateAmount());
+        return String.format("%s\t\t\t%d\t\t%,d", name, quantity, calculateAmount());
     }
 
     // 증정 내역을 영수증 형식의 문자열로 변환
     public String describeGift() {
-        return String.format("%s\t\t%d", name, giftQuantity);
+        return String.format("%s\t\t\t%d", name, giftQuantity);
     }
 
     // 증정 품목이 있는지 확인

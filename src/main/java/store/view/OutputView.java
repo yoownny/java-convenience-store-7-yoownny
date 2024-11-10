@@ -5,7 +5,7 @@ import store.domain.receipt.Receipt;
 
 public class OutputView {
     private static final String STORE_HEADER = "==============W 편의점================";
-    private static final String GIFT_HEADER = "=============증 정===============";
+    private static final String GIFT_HEADER = "=============증     정===============";
     private static final String FOOTER = "====================================";
 
     public void printProducts(List<String> products) {
@@ -27,7 +27,7 @@ public class OutputView {
 
     private void printHeader() {
         System.out.println(STORE_HEADER);
-        System.out.println("상품명\t\t수량\t금액");
+        System.out.println("상품명\t\t\t수량\t\t금액");
     }
 
     private void printOrderSection(Receipt receipt) {
@@ -46,19 +46,19 @@ public class OutputView {
     }
 
     private void printPaymentSummary(Receipt receipt) {
-        System.out.printf("총구매액\t\t%d\t%,d\n",
+        System.out.printf("총구매액\t\t\t%d\t\t%,d\n",
                 receipt.getTotalQuantity(),
                 receipt.calculateTotalAmount());
 
         // 행사 할인은 항상 출력 (0이어도 출력)
-        System.out.printf("행사할인\t\t\t-%,d\n",
+        System.out.printf("행사할인\t\t\t\t\t-%,d\n",
                 receipt.getPromotionDiscount());
 
         // 멤버십 할인도 항상 출력 (0이어도 출력)
-        System.out.printf("멤버십할인\t\t\t-%,d\n",
+        System.out.printf("멤버십할인\t\t\t\t-%,d\n",
                 receipt.calculateMembershipDiscount());
 
-        System.out.printf("내실돈\t\t\t %,d\n",
+        System.out.printf("내실돈\t\t\t\t\t %,d\n",
                 receipt.calculateFinalAmount());
     }
 }

@@ -87,10 +87,10 @@ public class InputView {
     }
 
     public boolean readAdditionalPurchase(String productName, int quantity) {
-        System.out.printf("현재 %s은(는) %d개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)\n",
-                productName, quantity);
+        System.out.printf("\n현재 %s은(는) %d개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)\n", productName, quantity);
         return readYesNo();
     }
+
     public boolean readMembershipOption() {
         System.out.println("\n멤버십 할인을 받으시겠습니까? (Y/N)");
         return readYesNo();

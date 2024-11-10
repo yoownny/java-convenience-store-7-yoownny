@@ -51,6 +51,7 @@ public class Application {
         try {
             Map<String, Integer> items = inputView.readItem();
             items = handlePromotionOptions(items);
+            orderService.validateOrder(items);
             boolean useMembership = inputView.readMembershipOption();
             return orderService.createOrder(items, useMembership);
         } catch (IllegalArgumentException e) {

@@ -18,15 +18,23 @@ public class OrderService {
     }
 
     public Receipt createOrder(Map<String, Integer> orderItems, boolean useMembership) {
-        validateOrder(orderItems);
         List<ReceiptItem> receiptItems = processOrderItems(orderItems);
         return createReceipt(receiptItems, useMembership);
     }
 
     // 주문 유효성 검사
-    private void validateOrder(Map<String, Integer> orderItems) {
+    public void validateOrder(Map<String, Integer> orderItems) {
         if (orderItems == null || orderItems.isEmpty()) {
             throw new IllegalArgumentException("주문 항목이 비어있습니다.");
+        }
+
+        // 상품 존재 여부 및 재고 확인
+        for (Map.Entry<String, Integer> entry : orderItems.entrySet()) {
+            String productName = entry.getKey();
+            int quantity = entry.getValue();
+
+            List<Product> availableProducts = products.findAllByName(productName);
+            validateTotalStock(productName, quantity, availableProducts);
         }
     }
 
@@ -41,22 +49,62 @@ public class OrderService {
     }
 
     private ReceiptItem processOneItem(String productName, int quantity) {
-        Product product = findProduct(productName);
-        validateStock(product, quantity);
+        List<Product> availableProducts = products.findAllByName(productName);
+        Product promotionProduct = findPromotionProduct(availableProducts);
+        Product normalProduct = findNormalProduct(availableProducts);
 
-        int totalQuantity = quantity;
-        if (promotionService.shouldAskForAdditionalItems(product, quantity)) {
-            totalQuantity *= 2; // 1+1이므로 2배
-            validateStock(product, totalQuantity);
+        int promotionQuantity = calculatePromotionQuantity(promotionProduct, quantity);
+        int remainingQuantity = quantity - promotionQuantity;
+        int giftQuantity = 0;
+
+        // 프로모션 수량 처리
+        if (promotionQuantity > 0) {
+            giftQuantity = promotionService.calculateGiftQuantity(promotionProduct, promotionQuantity);
+            promotionProduct.decreaseQuantity(promotionQuantity);
         }
 
-        product.decreaseQuantity(totalQuantity);
+        // 일반 재고 처리
+        if (remainingQuantity > 0) {
+            normalProduct.decreaseQuantity(remainingQuantity);
+        }
 
-        // 프로모션 적용될 수 있는 수량 계산
-        int promotionalQuantity = promotionService.calculatePromotionalQuantity(product, quantity);
-        int giftQuantity = promotionService.calculateGiftQuantity(product, promotionalQuantity);
+        return new ReceiptItem(productName, quantity, findProduct(productName).getPrice(), giftQuantity);
+    }
 
-        return new ReceiptItem(productName, quantity, product.getPrice(), giftQuantity);
+    // 재고 확인 메서드들
+    public void validateTotalStock(String productName, int quantity, List<Product> availableProducts) {
+        int totalStock = availableProducts.stream()
+                .mapToInt(Product::getQuantity)
+                .sum();
+
+        if (totalStock < quantity) {
+            throw new IllegalArgumentException(
+                    String.format("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.", productName, totalStock, quantity));
+        }
+    }
+
+    private Product findPromotionProduct(List<Product> products) {
+        return products.stream()
+                .filter(Product::hasPromotion)
+                .findFirst()
+                .orElse(null);
+    }
+
+    private Product findNormalProduct(List<Product> products) {
+        return products.stream()
+                .filter(p -> !p.hasPromotion())
+                .findFirst()
+                .orElse(null);
+    }
+
+    private int calculatePromotionQuantity(Product promotionProduct, int requestedQuantity) {
+        if (promotionProduct == null || !promotionProduct.hasEnoughStock(1)) {
+            return 0;
+        }
+
+        // 2+1 프로모션의 경우 3의 배수로 계산
+        int maxPromotionSets = promotionProduct.getQuantity() / 3 * 3;
+        return Math.min(requestedQuantity, maxPromotionSets);
     }
 
     // 상품 찾기
@@ -67,38 +115,9 @@ public class OrderService {
                 ));
     }
 
-    // 재고 확인
-    private void validateStock(Product product, int quantity) {
-        if (!product.hasEnoughStock(quantity)) {
-            throw new IllegalArgumentException(
-                    String.format("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.")
-            );
-        }
-    }
-
     // 영수증 생성
     private Receipt createReceipt(List<ReceiptItem> items, boolean useMembership) {
         int promotionDiscount = promotionService.calculateTotalDiscount(items);
         return new Receipt(items, promotionDiscount, useMembership);
-    }
-
-    public boolean shouldAskForAdditionalItems(String productName, int quantity) {
-        Product product = findProduct(productName);
-        return promotionService.shouldAskForAdditionalItems(product, quantity);
-    }
-
-    public int calculateAdditionalQuantity(String productName, int quantity) {
-        Product product = findProduct(productName);
-        return promotionService.calculateAdditionalQuantity(product, quantity);
-    }
-
-    public boolean shouldShowNonPromotionalWarning(String productName, int quantity) {
-        Product product = findProduct(productName);
-        return promotionService.shouldShowNonPromotionalWarning(product, quantity);
-    }
-
-    public int calculateNonPromotionalQuantity(String productName, int quantity) {
-        Product product = findProduct(productName);
-        return promotionService.calculateNonPromotionalQuantity(product, quantity);
     }
 }

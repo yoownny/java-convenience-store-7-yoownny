@@ -48,9 +48,4 @@ public class ReceiptItem {
     public int getPrice() {
         return price;
     }
-
-    // hasPromotion 메서드 추가
-    public boolean hasPromotion() {
-        return hasGift(); // 현재는 증정품이 있으면 프로모션이 적용된 것으로 간주
-    }
 }

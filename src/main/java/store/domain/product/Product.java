@@ -16,10 +16,10 @@ public class Product {
     }
 
     // 재고 감소
-    public void decreaseQuantity(int orderQuantity) {
-        validateOrderQuantity(orderQuantity);
-        validateStock(orderQuantity);
-        this.quantity -= orderQuantity;
+    public void decreaseQuantity(int amount) {
+        validateOrderQuantity(amount);
+        validateStock(amount);
+        this.quantity -= amount;
     }
 
     // 주문 수량 검증
@@ -32,8 +32,7 @@ public class Product {
     // 재고가 충분한지 검증
     private void validateStock(int orderQuantity) {
         if (this.quantity < orderQuantity) {
-            throw new IllegalStateException(
-                    String.format("[%s] 상품의 재고가 부족합니다.", name)
+            throw new IllegalStateException( String.format("[%s] 상품의 재고가 부족합니다.", name)
             );
         }
     }
@@ -68,18 +67,15 @@ public class Product {
 
     // 유요한 프로모션이 있는지 확인
     public boolean hasPromotion() {
-        if (promotionName == null || promotionName.isEmpty() || promotionName.equals("null")) {
-            return false;
-        }
-        return true;
+        return promotionName != null && !promotionName.isEmpty() && !promotionName.equals("null");
+    }
+
+    public boolean hasEnoughStock(int orderQuantity) {
+        return quantity >= orderQuantity;
     }
 
     public boolean matchesName(String targetName) {
         return this.name.equals(targetName);
-    }
-
-    public int calculateAmountFor(int quantity) {
-        return this.price * quantity;
     }
 
     public String getName() {
@@ -90,15 +86,15 @@ public class Product {
         return price;
     }
 
+    public int getQuantity() {
+        return quantity;
+    }
+
     public String getPromotionName() {
         return promotionName;
     }
 
     private boolean isStockEmpty() {
         return quantity == 0;
-    }
-
-    public boolean hasEnoughStock(int orderQuantity) {
-        return quantity >= orderQuantity;
     }
 }

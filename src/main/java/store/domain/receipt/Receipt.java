@@ -73,20 +73,9 @@ public class Receipt {
                 productName.contains(FLASH_SALE);
     }
 
-
     // 최종 결제 금액 계산
     public int calculateFinalAmount() {
         return calculateTotalAmount() - promotionDiscount - calculateMembershipDiscount();
-    }
-
-    // 프로모션 할인이 적용되었는지 확인
-    public boolean hasPromotionDiscount() {
-        return promotionDiscount > 0;
-    }
-
-    // 멤버십 할인이 적용되었는지 확인
-    public boolean hasMembershipDiscount() {
-        return useMembership && calculateMembershipDiscount() > 0;
     }
 
 }

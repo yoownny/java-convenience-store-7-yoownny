@@ -23,9 +23,7 @@ public class InputView {
         System.out.println("\n구매하실 상품명과 수량을 입력해 주세요. (예: [사이다-2],[감자칩-1])");
         String input = Console.readLine();
         validateInput(input);
-        Map<String, Integer> orders = parseOrderInput(input);
-        validateProductsExist(orders);
-        return orders;
+        return parseOrderInput(input);
     }
 
     private void validateInput(String input) {
@@ -72,12 +70,6 @@ public class InputView {
         }
     }
 
-    private void validateProductsExist(Map<String, Integer> orders) {
-        for (String productName : orders.keySet()) {
-            orderService.findProduct(productName);
-        }
-    }
-
     private int parseQuantity(String quantity) {
         try {
             int parsedQuantity = Integer.parseInt(quantity);
@@ -99,7 +91,6 @@ public class InputView {
                 productName, quantity);
         return readYesNo();
     }
-
     public boolean readMembershipOption() {
         System.out.println("\n멤버십 할인을 받으시겠습니까? (Y/N)");
         return readYesNo();

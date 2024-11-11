@@ -11,6 +11,7 @@ public class PromotionService {
     private static final String MD_PROMOTION = "MD추천상품";
     private static final String FLASH_SALE = "반짝할인";
     private static final String CARBONATE_PROMOTION = "탄산2+1";
+
     private final Map<String, Promotion> promotions;
 
     public PromotionService() {
@@ -31,24 +32,34 @@ public class PromotionService {
     }
 
     public boolean canAddMoreItems(String productName, Product product, int quantity) {
-        if (!product.hasPromotion()) {
+        if (!isValidForPromotion(product)) {
             return false;
         }
+        String promotionName = product.getPromotionName();
+        int requiredQuantity = getPromotionQuantityForAddition(promotionName);
+        int remainingQuantity = quantity % requiredQuantity;
+        return isValidRemainingQuantity(promotionName, remainingQuantity)
+                && product.hasEnoughStock(quantity + 1);
+    }
 
-        if (MD_PROMOTION.equals(product.getPromotionName())) {
-            return quantity  % 2 == 1 && product.hasEnoughStock(quantity + 1);
+    private boolean isValidForPromotion(Product product) {
+        return product != null && product.hasPromotion();
+    }
+
+    private int getPromotionQuantityForAddition(String promotionName) {
+        if(isTwoPlusOnePromotion(promotionName)) {
+            return 3;
         }
+        return 2;
+    }
 
-        if (FLASH_SALE.equals(product.getPromotionName())) {
-            return quantity  % 2 == 1 && product.hasEnoughStock(quantity + 1);
+    private boolean isValidRemainingQuantity(String promotionName, int remainingQuantity) {
+        if(isTwoPlusOnePromotion(promotionName)) {
+            int requiredRemaining = 2;
+            return remainingQuantity == requiredRemaining;
         }
-
-        if (CARBONATE_PROMOTION.equals(product.getPromotionName())) {
-            int remainingQuantity = quantity % 3;
-            return remainingQuantity == 2 && product.hasEnoughStock(quantity + 1);
-        }
-
-        return false;
+        int requiredRemaining =  1;
+        return remainingQuantity == requiredRemaining;
     }
 
     public Promotion getPromotion(String promotionName) {

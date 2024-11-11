@@ -29,8 +29,7 @@ public class Product {
 
     private void validateStock(int orderQuantity) {
         if (this.quantity < orderQuantity) {
-            throw new IllegalStateException( String.format("[%s] 상품의 재고가 부족합니다.", name)
-            );
+            throw new IllegalStateException("상품의 재고가 부족합니다.");
         }
     }
 
@@ -39,19 +38,14 @@ public class Product {
             return String.format("- %s %,d원 재고 없음 %s", name, price, formatPromotion().trim());
         }
         if (hasPromotion() && !hasNonPromotionalStock(allProducts)) {
-            return String.format("- %s %,d원 %d개 %s\n"
-                    + "- %s %,d원 재고 없음", name, price, quantity, formatPromotion().trim(), name, price);
+            return String.format("- %s %,d원 %d개 %s\n- %s %,d원 재고 없음", name, price, quantity, formatPromotion().trim(), name, price);
         }
         return String.format("- %s %,d원 %d개 %s", name, price, quantity, formatPromotion().trim());
     }
 
-    private boolean hasNonPromotionalStock(List<Product> allProducts) {
-        for (Product product : allProducts) {
-            if (product.matchesName(name) && !product.hasPromotion() && product.quantity > 0) {
-                return true;
-            }
-        }
-        return false;
+
+    private boolean isStockEmpty() {
+        return quantity == 0;
     }
 
     private String formatPromotion() {
@@ -65,12 +59,21 @@ public class Product {
         return promotionName != null && !promotionName.isEmpty() && !promotionName.equals("null");
     }
 
-    public boolean hasEnoughStock(int orderQuantity) {
-        return quantity >= orderQuantity;
+    private boolean hasNonPromotionalStock(List<Product> allProducts) {
+        for (Product product : allProducts) {
+            if (product.matchesName(name) && !product.hasPromotion() && product.quantity > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean matchesName(String targetName) {
         return this.name.equals(targetName);
+    }
+
+    public boolean hasEnoughStock(int orderQuantity) {
+        return quantity >= orderQuantity;
     }
 
     public String getName() {
@@ -89,7 +92,4 @@ public class Product {
         return promotionName;
     }
 
-    private boolean isStockEmpty() {
-        return quantity == 0;
-    }
 }

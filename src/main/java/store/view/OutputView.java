@@ -16,11 +16,9 @@ public class OutputView {
         System.out.println();
         printHeader();
         printOrderSection(receipt);
-
         if (!receipt.createGiftLines().isEmpty()) {
             printGiftSection(receipt);
         }
-
         printFooter();
         printPaymentSummary(receipt);
     }
@@ -49,13 +47,10 @@ public class OutputView {
         System.out.printf("총구매액\t\t\t%d\t\t%,d\n",
                 receipt.getTotalQuantity(),
                 receipt.calculateTotalAmount());
-
         System.out.printf("행사할인\t\t\t\t\t-%,d\n",
                 receipt.getPromotionDiscount());
-
         System.out.printf("멤버십할인\t\t\t\t-%,d\n",
                 receipt.calculateMembershipDiscount());
-
         System.out.printf("내실돈\t\t\t\t\t %,d\n",
                 receipt.calculateFinalAmount());
     }

@@ -33,7 +33,6 @@ public class InputView {
         String cleanInput = input.replace("[", "").replace("]", "");
         String[] orderItems = cleanInput.split(",");
         validateOrderItems(orderItems);
-
         Map<String, Integer> orders = new HashMap<>();
         for (String item : orderItems) {
             String[] parts = item.split(ITEM_DELIMITER);
@@ -81,8 +80,7 @@ public class InputView {
     }
 
     public boolean confirmNonPromotionalPurchase(String productName, int quantity) {
-        System.out.printf("\n현재 %s %d개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)\n",
-                productName, quantity);
+        System.out.printf("\n현재 %s %d개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)\n", productName, quantity);
         return readYesNo();
     }
 

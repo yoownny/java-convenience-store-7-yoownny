@@ -47,18 +47,18 @@ public class PromotionService {
     }
 
     private int getPromotionQuantityForAddition(String promotionName) {
-        if(isTwoPlusOnePromotion(promotionName)) {
+        if (isTwoPlusOnePromotion(promotionName)) {
             return 3;
         }
         return 2;
     }
 
     private boolean isValidRemainingQuantity(String promotionName, int remainingQuantity) {
-        if(isTwoPlusOnePromotion(promotionName)) {
+        if (isTwoPlusOnePromotion(promotionName)) {
             int requiredRemaining = 2;
             return remainingQuantity == requiredRemaining;
         }
-        int requiredRemaining =  1;
+        int requiredRemaining = 1;
         return remainingQuantity == requiredRemaining;
     }
 

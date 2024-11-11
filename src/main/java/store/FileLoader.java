@@ -37,12 +37,10 @@ public class FileLoader {
     private static Product parseProduct(String line) {
         String[] parts = line.split(",");
         validateProductParts(parts);
-
         String name = parts[0];
         int price = Integer.parseInt(parts[1]);
         int quantity = Integer.parseInt(parts[2]);
         String promotionName = parts[3];
-
         return new Product(name, price, quantity, promotionName);
     }
 
@@ -70,7 +68,6 @@ public class FileLoader {
     private static Promotion parsePromotion(String line) {
         String[] parts = line.split(",");
         validatePromotionParts(parts);
-
         return new Promotion(
                 parts[0],
                 LocalDate.parse(parts[3]),

@@ -1,6 +1,8 @@
 package store;
 
 import camp.nextstep.edu.missionutils.test.NsTest;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -59,6 +61,59 @@ class ApplicationTest extends NsTest {
             runException("[컵라면-12]", "N", "N");
             assertThat(output()).contains("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
         });
+    }
+
+    @Nested
+    @DisplayName("멤버십 할인 테스트")
+    class MembershipDiscount {
+        @Test
+        @DisplayName("멤버십 할인이 올바르게 적용된다")
+        void 멤버십_할인_적용() {
+            assertSimpleTest(() -> {
+                run("[물-2]", "Y", "N");
+                assertThat(output().replaceAll("\\s", "")).contains("멤버십할인-300");
+            });
+        }
+
+        @Test
+        @DisplayName("프로모션 상품은 멤버십 할인이 적용되지 않는다")
+        void 프로모션_상품_멤버십_할인_미적용() {
+            assertSimpleTest(() -> {
+                run("[콜라-3]", "Y", "N");
+                assertThat(output().replaceAll("\\s", "")).contains("멤버십할인-0");
+            });
+        }
+    }
+
+    @Nested
+    @DisplayName("예외 상황 테스트")
+    class ExceptionCases {
+        @Test
+        @DisplayName("재고 초과 구매시 에러 메시지를 출력한다")
+        void 재고_초과_구매() {
+            assertSimpleTest(() -> {
+                runException("[컵라면-12]", "N", "N");
+                assertThat(output()).contains("[ERROR] 재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
+            });
+        }
+
+        @Test
+        @DisplayName("잘못된 입력 형식에 대해 에러 메시지를 출력한다")
+        void 잘못된_입력_형식() {
+            assertSimpleTest(() -> {
+                runException("물-1", "N", "N");
+                assertThat(output()).contains("[ERROR] 입력값이 올바른 형식이 아닙니다.");
+            });
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 상품 구매시 에러 메시지를 출력한다")
+        void 존재하지_않는_상품() {
+            assertSimpleTest(() -> {
+                runException("[커피-1]", "N", "N");
+                assertThat(output()).contains("[ERROR] 존재하지 않는 상품입니다");
+            });
+        }
     }
 
     @Override

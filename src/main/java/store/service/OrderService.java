@@ -14,7 +14,6 @@ public class OrderService {
     private static final String EMPTY_ORDER_ERROR = "주문 항목이 비어있습니다.";
     private static final String STOCK_EXCEEDED_ERROR = "재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.";
     private static final String PRODUCT_NOT_FOUND_ERROR = "존재하지 않는 상품입니다.";
-    private static final String STOP_SHOPPINT = "상품 구매가 취소되었습니다.";
 
     private final Products products;
     private final PromotionService promotionService;

@@ -9,7 +9,7 @@ import store.domain.receipt.ReceiptItem;
 
 public class PromotionService {
     private static final String MD_PROMOTION = "MD추천상품";
-    private static final String STAR_PROMOTION = "반짝할인";
+    private static final String FLASH_SALE = "반짝할인";
     private static final String CARBONATE_PROMOTION = "탄산2+1";
     private final Map<String, Promotion> promotions;
 
@@ -39,7 +39,7 @@ public class PromotionService {
             return quantity  % 2 == 1 && product.hasEnoughStock(quantity + 1);
         }
 
-        if (STAR_PROMOTION.equals(product.getPromotionName())) {
+        if (FLASH_SALE.equals(product.getPromotionName())) {
             return quantity  % 2 == 1 && product.hasEnoughStock(quantity + 1);
         }
 
@@ -51,8 +51,13 @@ public class PromotionService {
         return false;
     }
 
-
     public Promotion getPromotion(String promotionName) {
         return promotions.get(promotionName);
+    }
+
+    public boolean isPromotionProduct(String productName) {
+        return productName.contains(MD_PROMOTION)
+                || productName.contains(FLASH_SALE)
+                || productName.contains(CARBONATE_PROMOTION);
     }
 }

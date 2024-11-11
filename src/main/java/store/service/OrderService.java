@@ -168,6 +168,6 @@ public class OrderService {
 
     private Receipt createReceipt(List<ReceiptItem> items, boolean useMembership) {
         int promotionDiscount = promotionService.calculateTotalDiscount(items);
-        return new Receipt(items, promotionDiscount, useMembership);
+        return new Receipt(items, promotionDiscount, useMembership, promotionService);
     }
 }

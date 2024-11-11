@@ -27,7 +27,7 @@ public class Products {
 
     public List<String> describeAllProducts() {
         return products.stream()
-                .map(product -> product.describeProduct(products)) // 모든 상품 리스트 전달
+                .map(product -> product.describeProduct(products))
                 .toList();
     }
 }

@@ -60,4 +60,8 @@ public class PromotionService {
                 || productName.contains(FLASH_SALE)
                 || productName.contains(CARBONATE_PROMOTION);
     }
+
+    public boolean isTwoPlusOnePromotion(String promotionName) {
+        return CARBONATE_PROMOTION.equals(promotionName);
+    }
 }

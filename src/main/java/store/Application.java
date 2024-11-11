@@ -21,7 +21,7 @@ public class Application {
         this.productService = new ProductService();
         this.promotionService = new PromotionService();
         this.orderService = new OrderService(productService.getProducts(), promotionService);
-        this.inputView = new InputView(orderService);
+        this.inputView = new InputView();
         this.outputView = new OutputView();
     }
 
@@ -52,15 +52,11 @@ public class Application {
     private Receipt createOrder() {
         try {
             Map<String, Integer> items = inputView.readItem();
-
+            items = handlePromotionOptions(items);
             orderService.validateOrder(items);
-
             if (!checkNonPromotionalItems(items)) {
                 return null;
             }
-
-            items = handlePromotionOptions(items);
-
             orderService.validateOrder(items);
             boolean useMembership = inputView.readMembershipOption();
             return orderService.createOrder(items, useMembership);

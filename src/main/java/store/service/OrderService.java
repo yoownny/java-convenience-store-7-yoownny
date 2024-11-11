@@ -28,13 +28,22 @@ public class OrderService {
         if (orderItems == null || orderItems.isEmpty()) {
             throw new IllegalArgumentException("주문 항목이 비어있습니다.");
         }
+        validateOrderStock(orderItems);
+    }
 
+    private void validateOrderStock(Map<String, Integer> orderItems) {
         for (Map.Entry<String, Integer> entry : orderItems.entrySet()) {
-            String productName = entry.getKey();
-            int quantity = entry.getValue();
+            List<Product> availableProducts = products.findAllByName(entry.getKey());
+            validateTotalStock(entry.getValue(), availableProducts);
+        }
+    }
 
-            List<Product> availableProducts = products.findAllByName(productName);
-            validateTotalStock(productName, quantity, availableProducts);
+    private void validateTotalStock(int quantity, List<Product> availableProducts) {
+        int totalStock = availableProducts.stream()
+                .mapToInt(Product::getQuantity)
+                .sum();
+        if (totalStock < quantity) {
+            throw new IllegalArgumentException("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
         }
     }
 
@@ -51,97 +60,69 @@ public class OrderService {
         List<Product> availableProducts = products.findAllByName(productName);
         Product promotionProduct = findPromotionProduct(availableProducts);
         Product normalProduct = findNormalProduct(availableProducts);
+        ProcessedQuantity processed = processPromotionQuantity(promotionProduct, quantity);
+        processRemainingQuantity(normalProduct, processed.remainingQuantity());
+        return new ReceiptItem(productName, quantity, findProduct(productName).getPrice(), processed.giftQuantity());
+    }
 
-        int giftQuantity = 0;
-        int remainingQuantity = quantity;
-
-        if (promotionProduct != null && promotionProduct.hasPromotion()) {
-            // PromotionService를 통해 프로모션을 가져옵니다.
-            Promotion promotion = promotionService.getPromotion(promotionProduct.getPromotionName());
-
-            // 프로모션이 유효한지 확인
-            if (promotion != null && promotion.isActive(DateTimes.now().toLocalDate())) {
-                if (promotionProduct.getPromotionName().equals("탄산2+1")) {
-                    int availableQuantity = Math.min(promotionProduct.getQuantity(), quantity);
-                    int maxPromotionSets = availableQuantity / 3;
-                    int promotionUseQuantity = maxPromotionSets * 3;
-
-                    if (promotionUseQuantity > 0) {
-                        giftQuantity = maxPromotionSets;
-                        promotionProduct.decreaseQuantity(availableQuantity);
-                        remainingQuantity = quantity - availableQuantity;
-                    }
-                } else if (promotionProduct.getPromotionName().equals("MD추천상품") ||
-                        promotionProduct.getPromotionName().equals("반짝할인")) {
-
-                    int availableQuantity = Math.min(promotionProduct.getQuantity(), quantity);
-                    int maxPromotionPairs = availableQuantity / 2;
-                    int promotionUseQuantity = maxPromotionPairs * 2;
-
-                    if (promotionUseQuantity > 0) {
-                        giftQuantity = maxPromotionPairs;
-                        promotionProduct.decreaseQuantity(availableQuantity);
-                        remainingQuantity = quantity - availableQuantity;
-                    }
-                }
-            }
+    private ProcessedQuantity processPromotionQuantity(Product promotionProduct, int quantity) {
+        if (!isValidPromotionProduct(promotionProduct)) {
+            return new ProcessedQuantity(0, quantity);
         }
-
-        if (remainingQuantity > 0) {
-            if (normalProduct != null && normalProduct.hasEnoughStock(remainingQuantity)) {
-                normalProduct.decreaseQuantity(remainingQuantity);
-            } else {
-                throw new IllegalArgumentException("일반 상품의 재고가 부족합니다.");
-            }
+        Promotion promotion = promotionService.getPromotion(promotionProduct.getPromotionName());
+        if (!isActivePromotion(promotion)) {
+            return new ProcessedQuantity(0, quantity);
         }
+        return calculatePromotionQuantities(promotionProduct, quantity);
+    }
 
-        return new ReceiptItem(productName, quantity, findProduct(productName).getPrice(), giftQuantity);
+    private boolean isValidPromotionProduct(Product product) {
+        return product != null && product.hasPromotion();
+    }
+
+    private boolean isActivePromotion(Promotion promotion) {
+        return promotion != null && promotion.isActive(DateTimes.now().toLocalDate());
+    }
+
+    private ProcessedQuantity calculatePromotionQuantities(Product product, int quantity) {
+        int availableQuantity = Math.min(product.getQuantity(), quantity);
+        int promotionDivisor = getPromotionDivisor(product.getPromotionName());
+        int maxSets = availableQuantity / promotionDivisor;
+        int useQuantity = maxSets * promotionDivisor;
+        if (useQuantity > 0) {
+            product.decreaseQuantity(availableQuantity);
+            return new ProcessedQuantity(maxSets, quantity - availableQuantity);
+        }
+        return new ProcessedQuantity(0, quantity);
+    }
+
+    private int getPromotionDivisor(String promotionName) {
+        if (promotionService.isTwoPlusOnePromotion(promotionName)) {
+            return 3;
+        }
+        return 2;
+    }
+
+    private void processRemainingQuantity(Product normalProduct, int remainingQuantity) {
+        if (remainingQuantity > 0 && normalProduct != null && normalProduct.hasEnoughStock(remainingQuantity)) {
+            normalProduct.decreaseQuantity(remainingQuantity);
+        }
     }
 
     public boolean shouldShowNonPromotionalWarning(String productName, int quantity) {
-        List<Product> availableProducts = products.findAllByName(productName);
-        Product promotionProduct = findPromotionProduct(availableProducts);
-
-        if (promotionProduct == null) {
-            return false;
-        }
-
-        return quantity > promotionProduct.getQuantity();
+        Product promotionProduct = findPromotionProduct(products.findAllByName(productName));
+        return promotionProduct != null && quantity > promotionProduct.getQuantity();
     }
 
     public int calculateNonPromotionalQuantity(String productName, int quantity) {
-        List<Product> availableProducts = products.findAllByName(productName);
-        Product promotionProduct = findPromotionProduct(availableProducts);
-
+        Product promotionProduct = findPromotionProduct(products.findAllByName(productName));
         if (promotionProduct == null) {
             return 0;
         }
-
-        int nonPromotionalQuantity = quantity - promotionProduct.getQuantity();
-        if (nonPromotionalQuantity > 0) {
-            int promotionStock = promotionProduct.getQuantity();
-            if (promotionProduct.getPromotionName().equals("탄산2+1")) {
-                int usablePromotionQuantity = (promotionStock / 3) * 3;
-                nonPromotionalQuantity = quantity - usablePromotionQuantity;
-            } else if (promotionProduct.getPromotionName().equals("MD추천상품") ||
-                    promotionProduct.getPromotionName().equals("반짝할인")) {
-                int usablePromotionQuantity = (promotionStock / 2) * 2;
-                nonPromotionalQuantity = quantity - usablePromotionQuantity;
-            }
-        }
-
-        return nonPromotionalQuantity;
-    }
-
-    public void validateTotalStock(String productName, int quantity, List<Product> availableProducts) {
-        int totalStock = availableProducts.stream()
-                .mapToInt(Product::getQuantity)
-                .sum();
-
-        if (totalStock < quantity) {
-            throw new IllegalArgumentException(
-                    String.format("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.", productName, totalStock, quantity));
-        }
+        int promotionStock = promotionProduct.getQuantity();
+        int promotionDivisor = getPromotionDivisor(promotionProduct.getPromotionName());
+        int usablePromotionQuantity = (promotionStock / promotionDivisor) * promotionDivisor;
+        return Math.max(0, quantity - usablePromotionQuantity);
     }
 
     private Product findPromotionProduct(List<Product> products) {
@@ -158,16 +139,16 @@ public class OrderService {
                 .orElse(null);
     }
 
-
     public Product findProduct(String productName) {
         return products.findByName(productName)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        String.format("존재하지 않는 상품입니다: %s", productName)
-                ));
+                .orElseThrow(() -> new IllegalArgumentException(String.format("존재하지 않는 상품입니다")));
     }
 
     private Receipt createReceipt(List<ReceiptItem> items, boolean useMembership) {
         int promotionDiscount = promotionService.calculateTotalDiscount(items);
         return new Receipt(items, promotionDiscount, useMembership, promotionService);
+    }
+
+    private record ProcessedQuantity(int giftQuantity, int remainingQuantity) {
     }
 }

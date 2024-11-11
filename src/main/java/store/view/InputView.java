@@ -3,15 +3,9 @@ package store.view;
 import camp.nextstep.edu.missionutils.Console;
 import java.util.HashMap;
 import java.util.Map;
-import store.service.OrderService;
 
 public class InputView {
     private static final String ITEM_DELIMITER = "-";
-    private final OrderService orderService;
-
-    public InputView(OrderService orderService) {
-        this.orderService = orderService;
-    }
 
     public void start() {
         System.out.println("\n안녕하세요. W편의점입니다.");

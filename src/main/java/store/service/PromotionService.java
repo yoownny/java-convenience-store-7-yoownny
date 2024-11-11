@@ -37,7 +37,7 @@ public class PromotionService {
         return item.giftQuantityValue() * item.priceValue();
     }
 
-    public boolean canAddMoreItems(String productName, Product product, int quantity) {
+    public boolean canAddMoreItems(Product product, int quantity) {
         if (!isValidForPromotion(product)) {
             return false;
         }
@@ -48,7 +48,6 @@ public class PromotionService {
         String promotionName = product.promotionNameValue();
         int requiredQuantity = calculatePromotionQuantity(promotionName);
         int remainingQuantity = quantity % requiredQuantity;
-
         return isValidRemainingQuantity(promotionName, remainingQuantity)
                 && product.hasEnoughStock(quantity + 1);
     }

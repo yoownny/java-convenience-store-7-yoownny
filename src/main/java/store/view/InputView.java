@@ -6,6 +6,10 @@ import java.util.Map;
 
 public class InputView {
     private static final String ITEM_DELIMITER = "-";
+    private static final String EMPTY_ORDER_ERROR = "올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.";
+    private static final String STOCK_EXCEEDED_ERROR = "재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.";
+    private static final String PRODUCT_NOT_FOUND_ERROR = "존재하지 않는 상품입니다. 다시 입력해 주세요.";
+    private static final String EXCEPTION_ERROR = "잘못된 입력입니다. 다시 입력해 주세요.";
 
     public void start() {
         System.out.println("\n안녕하세요. W편의점입니다.");
@@ -22,10 +26,10 @@ public class InputView {
 
     private void validateInput(String input) {
         if (input == null || input.trim().isEmpty()) {
-            throw new IllegalArgumentException("입력값이 비어있습니다.");
+            throw new IllegalArgumentException(EXCEPTION_ERROR);
         }
         if (!input.startsWith("[") || !input.endsWith("]")) {
-            throw new IllegalArgumentException("입력값이 올바른 형식이 아닙니다.");
+            throw new IllegalArgumentException(EXCEPTION_ERROR);
         }
     }
 
@@ -43,7 +47,7 @@ public class InputView {
 
     private void validateOrderItems(String[] orderItems) {
         if (orderItems.length == 0) {
-            throw new IllegalArgumentException("주문 항목이 없습니다.");
+            throw new IllegalArgumentException(EXCEPTION_ERROR);
         }
     }
 
@@ -56,10 +60,10 @@ public class InputView {
 
     private void validateOrderFormat(String[] parts) {
         if (parts.length != 2) {
-            throw new IllegalArgumentException("상품명-수량 형식으로 입력해주세요.");
+            throw new IllegalArgumentException(EMPTY_ORDER_ERROR);
         }
         if (parts[0].trim().isEmpty()) {
-            throw new IllegalArgumentException("상품명이 비어있습니다.");
+            throw new IllegalArgumentException(EXCEPTION_ERROR);
         }
     }
 
@@ -69,13 +73,13 @@ public class InputView {
             validateQuantity(parsedQuantity);
             return parsedQuantity;
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("수량은 숫자여야 합니다.");
+            throw new IllegalArgumentException(EMPTY_ORDER_ERROR);
         }
     }
 
     private void validateQuantity(int quantity) {
         if (quantity <= 0) {
-            throw new IllegalArgumentException("수량은 1개 이상이어야 합니다.");
+            throw new IllegalArgumentException(EMPTY_ORDER_ERROR);
         }
     }
 
@@ -108,7 +112,7 @@ public class InputView {
     private void validateYesNo(String input) {
         String upperInput = input.trim().toUpperCase();
         if (!upperInput.equals("Y") && !upperInput.equals("N")) {
-            throw new IllegalArgumentException("Y 또는 N으로 입력해주세요.");
+            throw new IllegalArgumentException(EXCEPTION_ERROR);
         }
     }
 }

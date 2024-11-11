@@ -23,13 +23,13 @@ public class Product {
 
     private void validateOrderQuantity(int orderQuantity) {
         if (orderQuantity <= 0) {
-            throw new IllegalArgumentException("주문 수량은 0보다 커야 합니다.");
+            throw new IllegalArgumentException("올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
         }
     }
 
     private void validateStock(int orderQuantity) {
         if (this.quantity < orderQuantity) {
-            throw new IllegalStateException("상품의 재고가 부족합니다.");
+            throw new IllegalStateException("재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.");
         }
     }
 
@@ -45,8 +45,7 @@ public class Product {
     }
 
     private String formatAvailableStockDescription(List<Product> allProducts) {
-        String baseDescription = String.format("- %s %,d원 %d개 %s",
-                name, price, quantity, formatPromotion());
+        String baseDescription = String.format("- %s %,d원 %d개 %s", name, price, quantity, formatPromotion());
         if (!hasPromotion()) {
             return baseDescription;
         }
@@ -57,8 +56,7 @@ public class Product {
     }
 
     private String appendNormalStockDescription(String baseDescription) {
-        return String.format("%s\n- %s %,d원 재고 없음",
-                baseDescription, name, price);
+        return String.format("%s\n- %s %,d원 재고 없음", baseDescription, name, price);
     }
 
     private boolean isStockEmpty() {

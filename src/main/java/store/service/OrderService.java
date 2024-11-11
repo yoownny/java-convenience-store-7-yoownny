@@ -11,9 +11,10 @@ import store.domain.receipt.Receipt;
 import store.domain.receipt.ReceiptItem;
 
 public class OrderService {
-    private static final String EMPTY_ORDER_ERROR = "주문 항목이 비어있습니다.";
+    private static final String EMPTY_ORDER_ERROR = "올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.";
     private static final String STOCK_EXCEEDED_ERROR = "재고 수량을 초과하여 구매할 수 없습니다. 다시 입력해 주세요.";
-    private static final String PRODUCT_NOT_FOUND_ERROR = "존재하지 않는 상품입니다.";
+    private static final String PRODUCT_NOT_FOUND_ERROR = "존재하지 않는 상품입니다. 다시 입력해 주세요.";
+    private static final String EXCEPTION_ERROR = "잘못된 입력입니다. 다시 입력해 주세요.";
 
     private final Products products;
     private final PromotionService promotionService;
@@ -71,9 +72,7 @@ public class OrderService {
     private ReceiptItem processOneItem(String productName, int quantity) {
         List<Product> availableProducts = products.findAllByName(productName);
         Product promotionProduct = findPromotionProduct(availableProducts);
-
         ProcessedQuantity processed = processPromotionQuantity(promotionProduct, quantity);
-
         return createReceiptItem(productName, quantity, processed.giftQuantity());
     }
 
@@ -86,12 +85,10 @@ public class OrderService {
         if (!isValidForPromotion(product)) {
             return new ProcessedQuantity(0, quantity);
         }
-
         Promotion promotion = promotionService.findPromotion(product.promotionNameValue());
         if (!isActivePromotion(promotion)) {
             return new ProcessedQuantity(0, quantity);
         }
-
         return calculatePromotionQuantities(product, quantity);
     }
 
@@ -106,7 +103,6 @@ public class OrderService {
     private ProcessedQuantity calculatePromotionQuantities(Product product, int quantity) {
         int availableQuantity = calculateAvailableQuantity(product, quantity);
         int promotionDivisor = getPromotionDivisor(product.promotionNameValue());
-
         return processPromotionSets(product, quantity, availableQuantity, promotionDivisor);
     }
 
@@ -121,15 +117,13 @@ public class OrderService {
         return 2;
     }
 
-    private ProcessedQuantity processPromotionSets(Product product, int quantity,
-                                                   int availableQuantity, int promotionDivisor) {
+    private ProcessedQuantity processPromotionSets(Product product, int quantity, int availableQuantity,
+                                                   int promotionDivisor) {
         int maxSets = availableQuantity / promotionDivisor;
         int useQuantity = maxSets * promotionDivisor;
-
         if (useQuantity <= 0) {
             return new ProcessedQuantity(0, quantity);
         }
-
         product.decreaseQuantity(availableQuantity);
         return new ProcessedQuantity(maxSets, quantity - availableQuantity);
     }
@@ -155,7 +149,6 @@ public class OrderService {
         int promotionStock = product.quantityValue();
         int promotionDivisor = getPromotionDivisor(product.promotionNameValue());
         int usablePromotionQuantity = (promotionStock / promotionDivisor) * promotionDivisor;
-
         return Math.max(0, quantity - usablePromotionQuantity);
     }
 
@@ -176,5 +169,6 @@ public class OrderService {
         return new Receipt(items, promotionDiscount, useMembership, promotionService);
     }
 
-    private record ProcessedQuantity(int giftQuantity, int remainingQuantity) {}
+    private record ProcessedQuantity(int giftQuantity, int remainingQuantity) {
+    }
 }

@@ -72,8 +72,25 @@ public class OrderService {
     private ReceiptItem processOneItem(String productName, int quantity) {
         List<Product> availableProducts = products.findAllByName(productName);
         Product promotionProduct = findPromotionProduct(availableProducts);
+        Product normalProduct = findNormalProduct(availableProducts);
         ProcessedQuantity processed = processPromotionQuantity(promotionProduct, quantity);
+        processRemainingQuantity(normalProduct, processed.remainingQuantity());
         return createReceiptItem(productName, quantity, processed.giftQuantity());
+    }
+
+    private Product findNormalProduct(List<Product> products) {
+        return products.stream()
+                .filter(p -> !p.hasPromotion())
+                .findFirst()
+                .orElse(null);
+    }
+
+    private void processRemainingQuantity(Product normalProduct, int remainingQuantity) {
+        if (remainingQuantity > 0) {
+            if (normalProduct != null && normalProduct.hasEnoughStock(remainingQuantity)) {
+                normalProduct.decreaseQuantity(remainingQuantity);
+            }
+        }
     }
 
     private ReceiptItem createReceiptItem(String productName, int quantity, int giftQuantity) {

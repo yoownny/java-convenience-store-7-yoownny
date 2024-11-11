@@ -61,30 +61,55 @@ public class Application {
         processShoppingResult(receipt);
     }
 
-    private Receipt createShoppingReceipt() { // 쇼핑 프로세스 -> 상품 주문
-        try {
-            Map<String, Integer> items = processOrderItems();
-            if (items == null) {
-                return null;
+    private Receipt createShoppingReceipt() {
+        Map<String, Integer> items = null;
+        while (items == null) {
+            try {
+                items = processOrderItems();
+            } catch (IllegalArgumentException e) {
+                printError(e.getMessage());
             }
-            return createReceiptWithMembership(items); // 쇼핑 프로세스 -> 영수증 생성
-        } catch (IllegalArgumentException e) {
-            printError(e.getMessage());
-            return null;
         }
+        return createReceiptWithMembership(items);
     }
 
     private Map<String, Integer> processOrderItems() {
-        Map<String, Integer> items = inputView.readItem();
-        items = processPromotions(items);
-        orderService.validateOrder(items);
-
-        if (!validateNonPromotionalItems(items)) {
+        Map<String, Integer> items = readItemWithRetry();
+        if (items == null) {
             return null;
         }
 
-        orderService.validateOrder(items);
+        items = processPromotions(items);
+
+        if (!validateAndUpdateItems(items)) {  // 유효성 검증 실패시 재시도
+            return processOrderItems();
+        }
+
         return items;
+    }
+
+    private Map<String, Integer> readItemWithRetry() {
+        while (true) {
+            try {
+                return inputView.readItem();
+            } catch (IllegalArgumentException e) {
+                printError(e.getMessage());
+            }
+        }
+    }
+
+    private boolean validateAndUpdateItems(Map<String, Integer> items) {
+        try {
+            orderService.validateOrder(items);
+            if (!validateNonPromotionalItems(items)) {
+                return false;  // 비프로모션 구매 거부시 false 반환
+            }
+            orderService.validateOrder(items);
+            return true;
+        } catch (IllegalArgumentException e) {
+            printError(e.getMessage());
+            return false;  // 유효성 검증 실패시 false 반환
+        }
     }
 
     private Map<String, Integer> processPromotions(Map<String, Integer> items) {

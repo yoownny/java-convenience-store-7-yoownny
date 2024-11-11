@@ -84,23 +84,49 @@ public class InputView {
     }
 
     public boolean confirmNonPromotionalPurchase(String productName, int quantity) {
-        System.out.printf("\n현재 %s %d개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)\n", productName, quantity);
-        return readYesNo();
+        while (true) {
+            try {
+                System.out.printf("\n현재 %s %d개는 프로모션 할인이 적용되지 않습니다. 그래도 구매하시겠습니까? (Y/N)\n",
+                        productName, quantity);
+                return readYesNo();
+            } catch (IllegalArgumentException e) {
+                System.out.println("\n[ERROR] " + e.getMessage());
+            }
+        }
     }
 
     public boolean readAdditionalPurchase(String productName, int quantity) {
-        System.out.printf("\n현재 %s은(는) %d개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)\n", productName, quantity);
-        return readYesNo();
+        while (true) {
+            try {
+                System.out.printf("\n현재 %s은(는) %d개를 무료로 더 받을 수 있습니다. 추가하시겠습니까? (Y/N)\n",
+                        productName, quantity);
+                return readYesNo();
+            } catch (IllegalArgumentException e) {
+                System.out.println("\n[ERROR] " + e.getMessage());
+            }
+        }
     }
 
     public boolean readMembershipOption() {
-        System.out.println("\n멤버십 할인을 받으시겠습니까? (Y/N)");
-        return readYesNo();
+        while (true) {
+            try {
+                System.out.println("\n멤버십 할인을 받으시겠습니까? (Y/N)");
+                return readYesNo();
+            } catch (IllegalArgumentException e) {
+                System.out.println("\n[ERROR] " + e.getMessage());
+            }
+        }
     }
 
     public boolean readContinueShopping() {
-        System.out.println("\n감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
-        return readYesNo();
+        while (true) {
+            try {
+                System.out.println("\n감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)");
+                return readYesNo();
+            } catch (IllegalArgumentException e) {
+                System.out.println("\n[ERROR] " + e.getMessage());
+            }
+        }
     }
 
     private boolean readYesNo() {

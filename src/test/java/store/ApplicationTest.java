@@ -17,24 +17,24 @@ class ApplicationTest extends NsTest {
         assertSimpleTest(() -> {
             run("[물-1]", "N", "N");
             assertThat(output()).contains(
-                "- 콜라 1,000원 10개 탄산2+1",
-                "- 콜라 1,000원 10개",
-                "- 사이다 1,000원 8개 탄산2+1",
-                "- 사이다 1,000원 7개",
-                "- 오렌지주스 1,800원 9개 MD추천상품",
-                "- 오렌지주스 1,800원 재고 없음",
-                "- 탄산수 1,200원 5개 탄산2+1",
-                "- 탄산수 1,200원 재고 없음",
-                "- 물 500원 10개",
-                "- 비타민워터 1,500원 6개",
-                "- 감자칩 1,500원 5개 반짝할인",
-                "- 감자칩 1,500원 5개",
-                "- 초코바 1,200원 5개 MD추천상품",
-                "- 초코바 1,200원 5개",
-                "- 에너지바 2,000원 5개",
-                "- 정식도시락 6,400원 8개",
-                "- 컵라면 1,700원 1개 MD추천상품",
-                "- 컵라면 1,700원 10개"
+                    "- 콜라 1,000원 10개 탄산2+1",
+                    "- 콜라 1,000원 10개",
+                    "- 사이다 1,000원 8개 탄산2+1",
+                    "- 사이다 1,000원 7개",
+                    "- 오렌지주스 1,800원 9개 MD추천상품",
+                    "- 오렌지주스 1,800원 재고 없음",
+                    "- 탄산수 1,200원 5개 탄산2+1",
+                    "- 탄산수 1,200원 재고 없음",
+                    "- 물 500원 10개",
+                    "- 비타민워터 1,500원 6개",
+                    "- 감자칩 1,500원 5개 반짝할인",
+                    "- 감자칩 1,500원 5개",
+                    "- 초코바 1,200원 5개 MD추천상품",
+                    "- 초코바 1,200원 5개",
+                    "- 에너지바 2,000원 5개",
+                    "- 정식도시락 6,400원 8개",
+                    "- 컵라면 1,700원 1개 MD추천상품",
+                    "- 컵라면 1,700원 10개"
             );
         });
     }
@@ -63,6 +63,11 @@ class ApplicationTest extends NsTest {
         });
     }
 
+    @Override
+    public void runMain() {
+        Application.main(new String[]{});
+    }
+
     @Nested
     @DisplayName("멤버십 할인 테스트")
     class MembershipDiscount {
@@ -76,11 +81,36 @@ class ApplicationTest extends NsTest {
         }
 
         @Test
+        @DisplayName("8000원 초과 구매시 멤버십 할인이 8000원으로 제한된다")
+        void 멤버십_할인_최대금액_제한() {
+            assertSimpleTest(() -> {
+                run("[정식도시락-5]", "Y", "N");
+                String outputWithoutSpaces = output().replaceAll("\\s", "");
+                assertThat(outputWithoutSpaces)
+                        .contains("멤버십할인-8,000")
+                        .contains("내실돈24,000");
+            });
+        }
+
+        @Test
         @DisplayName("프로모션 상품은 멤버십 할인이 적용되지 않는다")
         void 프로모션_상품_멤버십_할인_미적용() {
             assertSimpleTest(() -> {
                 run("[콜라-3]", "Y", "N");
                 assertThat(output().replaceAll("\\s", "")).contains("멤버십할인-0");
+            });
+        }
+
+        @Test
+        @DisplayName("프로모션 상품과 일반 상품 혼합 구매시 일반 상품에만 멤버십 할인이 적용된다")
+        void 혼합_구매_멤버십_할인() {
+            assertSimpleTest(() -> {
+                run("[정식도시락-5],[콜라-3]", "Y", "N");
+                String outputWithoutSpaces = output().replaceAll("\\s", "");
+                assertThat(outputWithoutSpaces)
+                        .contains("행사할인-1,000")
+                        .contains("멤버십할인-8,000")
+                        .contains("내실돈26,000");
             });
         }
     }
@@ -102,7 +132,7 @@ class ApplicationTest extends NsTest {
         void 잘못된_입력_형식() {
             assertSimpleTest(() -> {
                 runException("물-1", "N", "N");
-                assertThat(output()).contains("[ERROR] 입력값이 올바른 형식이 아닙니다.");
+                assertThat(output()).contains("[ERROR] 잘못된 입력입니다. 다시 입력해 주세요.");
             });
         }
 
@@ -111,13 +141,8 @@ class ApplicationTest extends NsTest {
         void 존재하지_않는_상품() {
             assertSimpleTest(() -> {
                 runException("[커피-1]", "N", "N");
-                assertThat(output()).contains("[ERROR] 존재하지 않는 상품입니다");
+                assertThat(output()).contains("[ERROR] 존재하지 않는 상품입니다. 다시 입력해 주세요.");
             });
         }
-    }
-
-    @Override
-    public void runMain() {
-        Application.main(new String[]{});
     }
 }

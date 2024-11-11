@@ -12,6 +12,7 @@ public class OutputView {
     private static final String PROMOTION_FORMAT = "행사할인\t\t\t\t\t-%,d\n";
     private static final String MEMBERSHIP_FORMAT = "멤버십할인\t\t\t\t-%,d\n";
     private static final String FINAL_FORMAT = "내실돈\t\t\t\t\t %,d\n";
+    private static final String CONTINUOUS_SHOPPING = "\n감사합니다. 구매하고 싶은 다른 상품이 있나요? (Y/N)";
 
     public void printProducts(List<String> products) {
         products.forEach(System.out::println);
@@ -72,5 +73,9 @@ public class OutputView {
 
     private void printFinalAmount(Receipt receipt) {
         System.out.printf(FINAL_FORMAT, receipt.calculateFinalAmount());
+    }
+
+    public void printContinueShopping() {
+        System.out.println(CONTINUOUS_SHOPPING);
     }
 }

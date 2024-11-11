@@ -56,38 +56,87 @@ public class Application {
         outputView.printProducts(productService.createProductDescriptions());
     }
 
-    private void processShoppingSession() {
+    private void processShoppingSession() { // 쇼핑 프로세스
         Receipt receipt = createShoppingReceipt();
         processShoppingResult(receipt);
     }
 
     private Receipt createShoppingReceipt() {
-        try {
-            Map<String, Integer> items = processOrderItems();
-            if (items == null) {
-                return null;
+        Map<String, Integer> items = null;
+        while (items == null) {
+            try {
+                items = processOrderItems();
+            } catch (IllegalArgumentException e) {
+                printError(e.getMessage());
             }
-            return createReceiptWithMembership(items);
-        } catch (IllegalArgumentException e) {
-            printError(e.getMessage());
-            return null;
         }
+        return createReceiptWithMembership(items);
     }
 
     private Map<String, Integer> processOrderItems() {
-        Map<String, Integer> items = inputView.readItem();
+        Map<String, Integer> items = readItemWithRetry();
+        if (items == null) {
+            return null;
+        }
+
         items = processPromotions(items);
 
-        validateAndUpdateItems(items);
+        if (!validateAndUpdateItems(items)) {  // 유효성 검증 실패시 재시도
+            return processOrderItems();
+        }
+
         return items;
     }
 
-    private void validateAndUpdateItems(Map<String, Integer> items) {
-        orderService.validateOrder(items);
-        if (!validateNonPromotionalItems(items)) {
-            throw new IllegalArgumentException("상품 구매가 취소되었습니다.");
+    private Map<String, Integer> readItemWithRetry() {
+        while (true) {
+            try {
+                return inputView.readItem();
+            } catch (IllegalArgumentException e) {
+                printError(e.getMessage());
+            }
         }
-        orderService.validateOrder(items);
+    }
+
+    private boolean validateAndUpdateItems(Map<String, Integer> items) {
+        try {
+            orderService.validateOrder(items);
+            if (!validateNonPromotionalItems(items)) {
+                return false;  // 비프로모션 구매 거부시 false 반환
+            }
+            orderService.validateOrder(items);
+            return true;
+        } catch (IllegalArgumentException e) {
+            printError(e.getMessage());
+            return false;  // 유효성 검증 실패시 false 반환
+        }
+    }
+
+    private Map<String, Integer> processPromotions(Map<String, Integer> items) {
+        Map<String, Integer> updatedItems = new HashMap<>(items);
+        items.forEach((name, quantity) ->
+                processProductPromotion(updatedItems, name, quantity));
+        return updatedItems;
+    }
+
+    private void processProductPromotion(Map<String, Integer> updatedItems,
+                                         String productName,
+                                         int quantity) {
+        Product product = orderService.findProduct(productName);
+        if (canApplyPromotion(productName, product, quantity)) {
+            updatePromotionQuantity(updatedItems, productName, quantity);
+        }
+    }
+
+    private boolean canApplyPromotion(String productName, Product product, int quantity) {
+        return promotionService.canAddMoreItems(product, quantity)
+                && inputView.readAdditionalPurchase(productName, 1);
+    }
+
+    private void updatePromotionQuantity(Map<String, Integer> items,
+                                         String productName,
+                                         int quantity) {
+        items.put(productName, quantity + 1);
     }
 
     private boolean validateNonPromotionalItems(Map<String, Integer> items) {
@@ -121,6 +170,10 @@ public class Application {
 
     private void processShoppingResult(Receipt receipt) {
         if (receipt == null) {
+            outputView.printContinueShopping();  // 새로 추가된 메소드
+            if (inputView.readContinueShopping()) {
+                startShoppingProcess();
+            }
             return;
         }
         displayReceiptAndContinueShopping(receipt);
@@ -131,33 +184,6 @@ public class Application {
         if (inputView.readContinueShopping()) {
             startShoppingProcess();
         }
-    }
-
-    private Map<String, Integer> processPromotions(Map<String, Integer> items) {
-        Map<String, Integer> updatedItems = new HashMap<>(items);
-        items.forEach((name, quantity) ->
-                processProductPromotion(updatedItems, name, quantity));
-        return updatedItems;
-    }
-
-    private void processProductPromotion(Map<String, Integer> updatedItems,
-                                         String productName,
-                                         int quantity) {
-        Product product = orderService.findProduct(productName);
-        if (canApplyPromotion(productName, product, quantity)) {
-            updatePromotionQuantity(updatedItems, productName, quantity);
-        }
-    }
-
-    private boolean canApplyPromotion(String productName, Product product, int quantity) {
-        return promotionService.canAddMoreItems(productName, product, quantity)
-                && inputView.readAdditionalPurchase(productName, 1);
-    }
-
-    private void updatePromotionQuantity(Map<String, Integer> items,
-                                         String productName,
-                                         int quantity) {
-        items.put(productName, quantity + 1);
     }
 
     private void printError(String message) {

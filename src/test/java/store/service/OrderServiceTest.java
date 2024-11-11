@@ -38,7 +38,7 @@ class OrderServiceTest {
             Map<String, Integer> emptyOrder = new HashMap<>();
             assertThatThrownBy(() -> orderService.validateOrder(emptyOrder))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("주문 항목이 비어있습니다.");
+                    .hasMessage("올바르지 않은 형식으로 입력했습니다. 다시 입력해 주세요.");
         }
 
         @Test
@@ -83,6 +83,6 @@ class OrderServiceTest {
     void findNonExistentProduct() {
         assertThatThrownBy(() -> orderService.findProduct("없는상품"))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("존재하지 않는 상품입니다.");
+                .hasMessage("존재하지 않는 상품입니다. 다시 입력해 주세요.");
     }
 }

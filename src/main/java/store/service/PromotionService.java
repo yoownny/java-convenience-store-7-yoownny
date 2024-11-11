@@ -11,6 +11,8 @@ public class PromotionService {
     private static final String MD_PROMOTION = "MD추천상품";
     private static final String FLASH_SALE = "반짝할인";
     private static final String CARBONATE_PROMOTION = "탄산2+1";
+    private static final int TWO_PLUS_ONE_DIVISOR = 3;
+    private static final int ONE_PLUS_ONE_DIVISOR = 2;
 
     private final Map<String, Promotion> promotions;
 
@@ -25,19 +27,28 @@ public class PromotionService {
     }
 
     private int calculateItemDiscount(ReceiptItem item) {
-        if (item.hasGift()) {
-            return item.getGiftQuantity() * item.getPrice();
+        if (!item.hasGift()) {
+            return 0;
         }
-        return 0;
+        return calculateGiftDiscount(item);
+    }
+
+    private int calculateGiftDiscount(ReceiptItem item) {
+        return item.giftQuantityValue() * item.priceValue();
     }
 
     public boolean canAddMoreItems(String productName, Product product, int quantity) {
         if (!isValidForPromotion(product)) {
             return false;
         }
-        String promotionName = product.getPromotionName();
-        int requiredQuantity = getPromotionQuantityForAddition(promotionName);
+        return checkPromotionAvailability(product, quantity);
+    }
+
+    private boolean checkPromotionAvailability(Product product, int quantity) {
+        String promotionName = product.promotionNameValue();
+        int requiredQuantity = calculatePromotionQuantity(promotionName);
         int remainingQuantity = quantity % requiredQuantity;
+
         return isValidRemainingQuantity(promotionName, remainingQuantity)
                 && product.hasEnoughStock(quantity + 1);
     }
@@ -46,27 +57,34 @@ public class PromotionService {
         return product != null && product.hasPromotion();
     }
 
-    private int getPromotionQuantityForAddition(String promotionName) {
+    private int calculatePromotionQuantity(String promotionName) {
         if (isTwoPlusOnePromotion(promotionName)) {
-            return 3;
+            return TWO_PLUS_ONE_DIVISOR;
         }
-        return 2;
+        return ONE_PLUS_ONE_DIVISOR;
     }
 
     private boolean isValidRemainingQuantity(String promotionName, int remainingQuantity) {
-        if (isTwoPlusOnePromotion(promotionName)) {
-            int requiredRemaining = 2;
-            return remainingQuantity == requiredRemaining;
-        }
-        int requiredRemaining = 1;
+        int requiredRemaining = calculateRequiredRemaining(promotionName);
         return remainingQuantity == requiredRemaining;
     }
 
-    public Promotion getPromotion(String promotionName) {
+    private int calculateRequiredRemaining(String promotionName) {
+        if (isTwoPlusOnePromotion(promotionName)) {
+            return 2;
+        }
+        return 1;
+    }
+
+    public Promotion findPromotion(String promotionName) {
         return promotions.get(promotionName);
     }
 
     public boolean isPromotionProduct(String productName) {
+        return containsAnyPromotion(productName);
+    }
+
+    private boolean containsAnyPromotion(String productName) {
         return productName.contains(MD_PROMOTION)
                 || productName.contains(FLASH_SALE)
                 || productName.contains(CARBONATE_PROMOTION);

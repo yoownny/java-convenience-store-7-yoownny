@@ -12,8 +12,8 @@ public class Receipt {
     private final boolean useMembership;
     private final PromotionService promotionService;
 
-
-    public Receipt(List<ReceiptItem> items, int promotionDiscount, boolean useMembership, PromotionService promotionService) {
+    public Receipt(List<ReceiptItem> items, int promotionDiscount,
+                   boolean useMembership, PromotionService promotionService) {
         this.items = items;
         this.promotionDiscount = promotionDiscount;
         this.useMembership = useMembership;
@@ -33,9 +33,9 @@ public class Receipt {
                 .toList();
     }
 
-    public int getTotalQuantity() {
+    public int calculateTotalQuantity() {
         return items.stream()
-                .mapToInt(ReceiptItem::getQuantity)
+                .mapToInt(ReceiptItem::quantityValue)
                 .sum();
     }
 
@@ -45,7 +45,7 @@ public class Receipt {
                 .sum();
     }
 
-    public int getPromotionDiscount() {
+    public int promotionDiscountValue() {
         return promotionDiscount;
     }
 
@@ -59,7 +59,14 @@ public class Receipt {
     private int calculateDiscountAmount() {
         int discountableAmount = calculateDiscountableAmount();
         int membershipDiscount = (int) (discountableAmount * MEMBERSHIP_DISCOUNT_RATE);
-        return Math.min(membershipDiscount, MAX_MEMBERSHIP_DISCOUNT);
+        return calculateFinalDiscountAmount(membershipDiscount);
+    }
+
+    private int calculateFinalDiscountAmount(int membershipDiscount) {
+        if (membershipDiscount > MAX_MEMBERSHIP_DISCOUNT) {
+            return MAX_MEMBERSHIP_DISCOUNT;
+        }
+        return membershipDiscount;
     }
 
     private int calculateDiscountableAmount() {
@@ -70,11 +77,10 @@ public class Receipt {
     }
 
     private boolean isDiscountableItem(ReceiptItem item) {
-        return !item.hasGift() && !promotionService.isPromotionProduct(item.getName());
+        return !item.hasGift() && !promotionService.isPromotionProduct(item.nameValue());
     }
 
     public int calculateFinalAmount() {
         return calculateTotalAmount() - promotionDiscount - calculateMembershipDiscount();
     }
-
 }

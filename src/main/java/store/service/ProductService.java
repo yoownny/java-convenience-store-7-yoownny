@@ -13,11 +13,11 @@ public class ProductService {
         this.products = new Products(productList);
     }
 
-    public List<String> getAllProductDescriptions() {
+    public List<String> createProductDescriptions() {
         return products.describeAllProducts();
     }
 
-    public Products getProducts() {
+    public Products productsValue() {
         return products;
     }
 }

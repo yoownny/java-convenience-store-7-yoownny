@@ -22,9 +22,16 @@ public class Application {
     public Application() {
         this.productService = new ProductService();
         this.promotionService = new PromotionService();
-        this.orderService = new OrderService(productService.getProducts(), promotionService);
+        this.orderService = initializeOrderService();
         this.inputView = new InputView();
         this.outputView = new OutputView();
+    }
+
+    private OrderService initializeOrderService() {
+        return new OrderService(
+                productService.productsValue(),
+                promotionService
+        );
     }
 
     public static void main(String[] args) {
@@ -33,87 +40,124 @@ public class Application {
 
     public void run() {
         try {
-            processOrders();
+            startShoppingProcess();
         } catch (IllegalArgumentException e) {
             printError(e.getMessage());
         }
     }
 
-    private void processOrders() {
+    private void startShoppingProcess() {
         displayInitialInformation();
-        Receipt receipt = processOrder();
-        handleReceipt(receipt);
+        processShoppingSession();
     }
 
     private void displayInitialInformation() {
         inputView.start();
-        outputView.printProducts(productService.getAllProductDescriptions());
+        outputView.printProducts(productService.createProductDescriptions());
     }
 
-    private Receipt processOrder() {
+    private void processShoppingSession() {
+        Receipt receipt = createShoppingReceipt();
+        processShoppingResult(receipt);
+    }
+
+    private Receipt createShoppingReceipt() {
         try {
-            Map<String, Integer> items = collectOrderItems();
+            Map<String, Integer> items = processOrderItems();
             if (items == null) {
                 return null;
             }
-            boolean useMembership = inputView.readMembershipOption();
-            return orderService.createOrder(items, useMembership);
+            return createReceiptWithMembership(items);
         } catch (IllegalArgumentException e) {
             printError(e.getMessage());
             return null;
         }
     }
 
-    private Map<String, Integer> collectOrderItems() {
+    private Map<String, Integer> processOrderItems() {
         Map<String, Integer> items = inputView.readItem();
-        items = handlePromotionOptions(items);
-        orderService.validateOrder(items);
-        if (!checkNonPromotionalItems(items)) {
-            return null;
-        }
-        orderService.validateOrder(items);
+        items = processPromotions(items);
+
+        validateAndUpdateItems(items);
         return items;
     }
 
-    private void handleReceipt(Receipt receipt) {
-        if (receipt != null) {
-            outputView.printReceipt(receipt);
-            if (inputView.readContinueShopping()) {
-                processOrders();
-            }
+    private void validateAndUpdateItems(Map<String, Integer> items) {
+        orderService.validateOrder(items);
+        if (!validateNonPromotionalItems(items)) {
+            throw new IllegalArgumentException("상품 구매가 취소되었습니다.");
+        }
+        orderService.validateOrder(items);
+    }
+
+    private boolean validateNonPromotionalItems(Map<String, Integer> items) {
+        return items.entrySet().stream()
+                .allMatch(this::validateNonPromotionalItem);
+    }
+
+    private boolean validateNonPromotionalItem(Map.Entry<String, Integer> entry) {
+        String productName = entry.getKey();
+        int quantity = entry.getValue();
+
+        if (!needsNonPromotionalWarning(productName, quantity)) {
+            return true;
+        }
+        return confirmNonPromotionalPurchase(productName, quantity);
+    }
+
+    private boolean needsNonPromotionalWarning(String productName, int quantity) {
+        return orderService.shouldShowNonPromotionalWarning(productName, quantity);
+    }
+
+    private boolean confirmNonPromotionalPurchase(String productName, int quantity) {
+        int nonPromotionalQty = orderService.calculateNonPromotionalQuantity(productName, quantity);
+        return inputView.confirmNonPromotionalPurchase(productName, nonPromotionalQty);
+    }
+
+    private Receipt createReceiptWithMembership(Map<String, Integer> items) {
+        boolean useMembership = inputView.readMembershipOption();
+        return orderService.createOrder(items, useMembership);
+    }
+
+    private void processShoppingResult(Receipt receipt) {
+        if (receipt == null) {
+            return;
+        }
+        displayReceiptAndContinueShopping(receipt);
+    }
+
+    private void displayReceiptAndContinueShopping(Receipt receipt) {
+        outputView.printReceipt(receipt);
+        if (inputView.readContinueShopping()) {
+            startShoppingProcess();
         }
     }
 
-    private boolean checkNonPromotionalItems(Map<String, Integer> items) {
-        for (Map.Entry<String, Integer> entry : items.entrySet()) {
-            if (!checkNonPromotionalItem(entry.getKey(), entry.getValue())) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean checkNonPromotionalItem(String productName, int quantity) {
-        if (orderService.shouldShowNonPromotionalWarning(productName, quantity)) {
-            int nonPromotionalQty = orderService.calculateNonPromotionalQuantity(productName, quantity);
-            return inputView.confirmNonPromotionalPurchase(productName, nonPromotionalQty);
-        }
-        return true;
-    }
-
-    private Map<String, Integer> handlePromotionOptions(Map<String, Integer> items) {
+    private Map<String, Integer> processPromotions(Map<String, Integer> items) {
         Map<String, Integer> updatedItems = new HashMap<>(items);
-        items.forEach((productName, quantity) ->
-                processPromotionOption(updatedItems, productName, quantity));
+        items.forEach((name, quantity) ->
+                processProductPromotion(updatedItems, name, quantity));
         return updatedItems;
     }
 
-    private void processPromotionOption(Map<String, Integer> updatedItems, String productName, int quantity) {
+    private void processProductPromotion(Map<String, Integer> updatedItems,
+                                         String productName,
+                                         int quantity) {
         Product product = orderService.findProduct(productName);
-        if (promotionService.canAddMoreItems(productName, product, quantity)
-                && inputView.readAdditionalPurchase(productName, 1)) {
-            updatedItems.put(productName, quantity + 1);
+        if (canApplyPromotion(productName, product, quantity)) {
+            updatePromotionQuantity(updatedItems, productName, quantity);
         }
+    }
+
+    private boolean canApplyPromotion(String productName, Product product, int quantity) {
+        return promotionService.canAddMoreItems(productName, product, quantity)
+                && inputView.readAdditionalPurchase(productName, 1);
+    }
+
+    private void updatePromotionQuantity(Map<String, Integer> items,
+                                         String productName,
+                                         int quantity) {
+        items.put(productName, quantity + 1);
     }
 
     private void printError(String message) {

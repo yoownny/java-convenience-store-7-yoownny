@@ -13,12 +13,19 @@ public class Promotion {
         this.endDate = endDate;
     }
 
-    public String getName() {
+    public String nameValue() {
         return name;
     }
 
     public boolean isActive(LocalDate date) {
-        return (date.isEqual(startDate) || date.isAfter(startDate)) &&
-                (date.isEqual(endDate) || date.isBefore(endDate));
+        return isAfterOrEqualStartDate(date) && isBeforeOrEqualEndDate(date);
+    }
+
+    private boolean isAfterOrEqualStartDate(LocalDate date) {
+        return date.isEqual(startDate) || date.isAfter(startDate);
+    }
+
+    private boolean isBeforeOrEqualEndDate(LocalDate date) {
+        return date.isEqual(endDate) || date.isBefore(endDate);
     }
 }

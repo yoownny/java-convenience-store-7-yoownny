@@ -35,24 +35,41 @@ public class Product {
 
     public String describeProduct(List<Product> allProducts) {
         if (isStockEmpty()) {
-            return String.format("- %s %,d원 재고 없음 %s", name, price, formatPromotion().trim());
+            return formatEmptyStockDescription();
         }
-        if (hasPromotion() && !hasNonPromotionalStock(allProducts)) {
-            return String.format("- %s %,d원 %d개 %s\n- %s %,d원 재고 없음", name, price, quantity, formatPromotion().trim(), name, price);
-        }
-        return String.format("- %s %,d원 %d개 %s", name, price, quantity, formatPromotion().trim());
+        return formatAvailableStockDescription(allProducts);
     }
 
+    private String formatEmptyStockDescription() {
+        return String.format("- %s %,d원 재고 없음 %s", name, price, formatPromotion());
+    }
+
+    private String formatAvailableStockDescription(List<Product> allProducts) {
+        String baseDescription = String.format("- %s %,d원 %d개 %s",
+                name, price, quantity, formatPromotion());
+        if (!hasPromotion()) {
+            return baseDescription;
+        }
+        if (hasNonPromotionalStock(allProducts)) {
+            return baseDescription;
+        }
+        return appendNormalStockDescription(baseDescription);
+    }
+
+    private String appendNormalStockDescription(String baseDescription) {
+        return String.format("%s\n- %s %,d원 재고 없음",
+                baseDescription, name, price);
+    }
 
     private boolean isStockEmpty() {
         return quantity == 0;
     }
 
     private String formatPromotion() {
-        if (hasPromotion()) {
-            return " " + promotionName;
+        if (!hasPromotion()) {
+            return "";
         }
-        return "";
+        return promotionName;
     }
 
     public boolean hasPromotion() {
@@ -60,12 +77,10 @@ public class Product {
     }
 
     private boolean hasNonPromotionalStock(List<Product> allProducts) {
-        for (Product product : allProducts) {
-            if (product.matchesName(name) && !product.hasPromotion() && product.quantity > 0) {
-                return true;
-            }
-        }
-        return false;
+        return allProducts.stream()
+                .filter(p -> p.matchesName(name))
+                .filter(p -> !p.hasPromotion())
+                .anyMatch(p -> p.quantity > 0);
     }
 
     public boolean matchesName(String targetName) {
@@ -76,20 +91,15 @@ public class Product {
         return quantity >= orderQuantity;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public int getPrice() {
+    public int priceValue() {
         return price;
     }
 
-    public int getQuantity() {
+    public int quantityValue() {
         return quantity;
     }
 
-    public String getPromotionName() {
+    public String promotionNameValue() {
         return promotionName;
     }
-
 }

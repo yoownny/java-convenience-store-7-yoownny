@@ -1,6 +1,9 @@
 package store.domain.receipt;
 
 public class ReceiptItem {
+    private static final String ITEM_FORMAT = "%s\t\t\t%d\t\t%,d";
+    private static final String GIFT_FORMAT = "%s\t\t\t%d";
+
     private final String name;
     private final int quantity;
     private final int price;
@@ -18,30 +21,30 @@ public class ReceiptItem {
     }
 
     public String describeOrder() {
-        return String.format("%s\t\t\t%d\t\t%,d", name, quantity, calculateAmount());
+        return String.format(ITEM_FORMAT, name, quantity, calculateAmount());
     }
 
     public String describeGift() {
-        return String.format("%s\t\t\t%d", name, giftQuantity);
+        return String.format(GIFT_FORMAT, name, giftQuantity);
     }
 
     public boolean hasGift() {
         return giftQuantity > 0;
     }
 
-    public String getName() {
+    public String nameValue() {
         return name;
     }
 
-    public int getQuantity() {
+    public int quantityValue() {
         return quantity;
     }
 
-    public int getGiftQuantity(){
+    public int giftQuantityValue() {
         return giftQuantity;
     }
 
-    public int getPrice() {
+    public int priceValue() {
         return price;
     }
 }
